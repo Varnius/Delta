@@ -30,14 +30,15 @@ package net.akimirksnis.delta.game.library
 		---------------------------*/
 		
 		// Parsed animations for skins (keys - objects from skinVector)
-		protected var _animations:Dictionary = new Dictionary();		
+		private var _animations:Dictionary = new Dictionary();		
 		
 		/*---------------------------
-		Object properties
+		Misc
 		---------------------------*/
 		
 		// Object properties parsed from 3DSMax (keys - objects from all object vectors)
-		protected var _properties:Dictionary = new Dictionary();
+		private var _properties:Dictionary = new Dictionary();
+		private var _mapData:Array = [];
 		
 		/**
 		 * Class constructor.
@@ -50,8 +51,8 @@ package net.akimirksnis.delta.game.library
 		
 		/*---------------------------
 		Public methods
-		---------------------------*/
-		
+		---------------------------*/		
+
 		/**
 		 * Adds an object to the library.
 		 * 
@@ -172,6 +173,11 @@ package net.akimirksnis.delta.game.library
 		public function get mapMeshes():Vector.<Mesh>
 		{
 			return _mapMeshes;
+		}		
+		
+		public function get mapData():Array
+		{
+			return _mapData;
 		}
 	}
 }

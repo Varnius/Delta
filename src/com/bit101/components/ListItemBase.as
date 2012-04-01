@@ -32,7 +32,7 @@ package com.bit101.components
 	import flash.display.DisplayObjectContainer;
 	import flash.events.MouseEvent;
 	
-	public class ListItem extends Component
+	public class ListItemBase extends Component
 	{
 		protected var _data:Object;
 		protected var _label:Label;
@@ -49,7 +49,7 @@ package com.bit101.components
 		 * @param ypos The y position to place this component.
 		 * @param data The string to display as a label or object with a label property.
 		 */
-		public function ListItem(parent:DisplayObjectContainer=null, xpos:Number=0, ypos:Number=0, data:Object = null)
+		public function ListItemBase(parent:DisplayObjectContainer=null, xpos:Number=0, ypos:Number=0, data:Object = null)
 		{
 			_data = data;
 			super(parent, xpos, ypos);
@@ -85,37 +85,6 @@ package com.bit101.components
 		public override function draw() : void
 		{
 			super.draw();
-			graphics.clear();
-
-			if(_selected)
-			{
-				graphics.beginFill(_selectedColor);
-			}
-			else if(_mouseOver)
-			{
-				graphics.beginFill(_rolloverColor);
-			}
-			else
-			{
-				graphics.beginFill(_defaultColor);
-			}
-			graphics.drawRect(0, 0, width, height);
-			graphics.endFill();
-
-            if(_data == null) return;
-
-			if(_data is String)
-			{
-                _label.text = _data as String;
-			}
-			else if(_data.hasOwnProperty("label") && _data.label is String)
-			{
-				_label.text = _data.label;
-			}
-			else
-            {
-				_label.text = _data.toString();
-			}
 		}		
 		
 		///////////////////////////////////
@@ -210,6 +179,5 @@ package com.bit101.components
 		{
 			return _rolloverColor;
 		}
-		
 	}
 }

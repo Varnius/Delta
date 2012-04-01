@@ -193,7 +193,7 @@ package com.bit101.utils
 			}
 			catch(e:Error)
 			{
-				trace("[MinimalConfigurator] > Exception cought: " + e.message);
+				//trace("[MinimalConfigurator] > Exception cought: " + e.message);
 			}
 			return compInst as Component;
 		}
@@ -252,7 +252,7 @@ package com.bit101.utils
 		Knob;
 		Label;
 		List;
-		ListItem;
+		ListItemBase;
 		Meter;
 		NumericStepper;
 		Panel;

@@ -69,12 +69,23 @@ package net.akimirksnis.delta.game.utils
 		/**
 		 * Trims string.
 		 * 
-		 * @string Object3D Object to search in.
+		 * @string Input string.
 		 * @return Trimmed string.
 		 */
 		public static function trim(s:String):String
 		{
 			return s.replace(/^\s+|\s+$/gs, '');
+		}
+		
+		/**
+		 * Trims file extension in string. (format: ****.***)
+		 * 
+		 * @string Input string.
+		 * @return Trimmed string.
+		 */
+		public static function trimExtension(s:String):String
+		{
+			return s.match(/(.*)\.(.*)/)[1];
 		}
 		
 		/**

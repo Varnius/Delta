@@ -16,6 +16,7 @@ package net.akimirksnis.delta.game.loaders
 	import net.akimirksnis.delta.game.loaders.parsers.BinaryModelFormat;
 	import net.akimirksnis.delta.game.loaders.parsers.ModelParser;
 	import net.akimirksnis.delta.game.utils.Globals;
+	import net.akimirksnis.delta.game.utils.Utils;
 
 	public class CoreLoader extends EventDispatcher
 	{
@@ -135,11 +136,34 @@ package net.akimirksnis.delta.game.loaders
 		{
 			configsLoaded = true;
 			onAssetLoadPartComplete();
-			preloader.text = "Loading assets...";
+			preloader.text = "Loading assets...";			
 			
 			var loader:XMLConfigLoader = XMLConfigLoader(e.currentTarget);
 			loader.removeEventListener(Event.COMPLETE, onConfigsLoaded);
 			_configs = loader.loadedData;
+			
+			// Fill level data
+			for each(var x:XML in _configs[0].maps.map)
+			{
+				library.mapData.push(
+					{
+						name: Utils.trimExtension(x.@filename).toLowerCase(),
+						filename: String(x.@filename),
+						skybox: String(x.@skybox)
+					}	
+				);
+			}
+			
+			for(var j:int = 0; j < 50; j++)
+			{
+				library.mapData.push(
+					{
+						name: 'derpy' + j,
+						filename: 'fname',
+						skybox: 'xxx'
+					}	
+				);
+			}
 
 			// Load models
 			var modelLoader:ModelLoader = new ModelLoader(Globals.LOCAL_ROOT + Globals.MODEL_DIR, _configs[0].models.model);
@@ -173,7 +197,7 @@ package net.akimirksnis.delta.game.loaders
 					trace("[CoreLoader] > Parsing model:", model.fileName);
 					
 					// Get filename without extension (since the file is in a directory of this name)
-					var modelMaterialsDir:String = model.fileName.match(/(.*)\.(.*)/)[1];
+					var modelMaterialsDir:String = Utils.trimExtension(model.fileName);
 					
 					// Determine whether model data is binary (A3D, 3DS) or text (Collada)
 					if(model.binary)

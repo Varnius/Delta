@@ -29,6 +29,7 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.entities.units.Walker2;
 	import net.akimirksnis.delta.game.entities.weapons.SMG;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
+	import net.akimirksnis.delta.game.gui.controllers.LevelSelectionOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.library.Library;
 	import net.akimirksnis.delta.game.loaders.CoreLoader;
@@ -140,7 +141,9 @@ package net.akimirksnis.delta.game.core
 			coreLoader.addEventListener(CoreLoaderEvent.MAP_LOADED, onMapLoaded, false, 0, true);
 			
 			// Focus level selection overlay
-			_guiController.getOverlayControllerByName("LevelSelectionOverlayController").focus();
+			var lsoController:LevelSelectionOverlayController = _guiController.getOverlayControllerByName("LevelSelectionOverlayController") as LevelSelectionOverlayController;			
+			lsoController.mapData = Library.instance.mapData;		
+			lsoController.focus();
 			
 			//coreLoader.loadMap("crossfire");
 		}

@@ -27,7 +27,7 @@
  */
 
 package com.bit101.components
-{	
+{
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -40,14 +40,14 @@ package com.bit101.components
 		protected var _itemHolder:Sprite;
 		protected var _panel:Panel;
 		protected var _listItemHeight:Number = 20;
-		protected var _listItemClass:Class =ListItem;
+		protected var _listItemClass:Class = ListItemBase;
 		protected var _scrollbar:VScrollBar;
 		protected var _selectedIndex:int = -1;
 		protected var _defaultColor:uint = Style.LIST_DEFAULT;
 		protected var _alternateColor:uint = Style.LIST_ALTERNATE;
 		protected var _selectedColor:uint = Style.LIST_SELECTED;
 		protected var _rolloverColor:uint = Style.LIST_ROLLOVER;
-		protected var _alternateRows:Boolean = false;		
+		protected var _alternateRows:Boolean = false;
 		
 		/**
 		 * Constructor
@@ -101,10 +101,10 @@ package com.bit101.components
 		 */
 		protected function makeListItems():void
 		{
-			var item:ListItem;
+			var item:ListItemBase;
 			while(_itemHolder.numChildren > 0)
 			{
-				item = ListItem(_itemHolder.getChildAt(0));
+				item = ListItemBase(_itemHolder.getChildAt(0));
 				item.removeEventListener(MouseEvent.CLICK, onSelect);
 				_itemHolder.removeChildAt(0);
 			}
@@ -132,7 +132,7 @@ package com.bit101.components
 			numItems = Math.min(numItems, _items.length);
             for(var i:int = 0; i < numItems; i++)
             {
-                var item:ListItem = _itemHolder.getChildAt(i) as ListItem;
+                var item:ListItemBase = _itemHolder.getChildAt(i) as ListItemBase;
 				if(offset + i < _items.length)
 				{
 	                item.data = _items[offset + i];
@@ -273,7 +273,7 @@ package com.bit101.components
 			_items.length = 0;
 			invalidate();
             fillItems();
-		}		
+		}
 		
 		///////////////////////////////////
 		// event handlers
@@ -284,16 +284,16 @@ package com.bit101.components
 		 */
 		protected function onSelect(event:Event):void
 		{
-			if(! (event.target is ListItem)) return;
+			if(!(event.target is ListItemBase)) return;
 			
 			var offset:int = _scrollbar.value;
 			
 			for(var i:int = 0; i < _itemHolder.numChildren; i++)
 			{
 				if(_itemHolder.getChildAt(i) == event.target) _selectedIndex = i + offset;
-				ListItem(_itemHolder.getChildAt(i)).selected = false;
+				ListItemBase(_itemHolder.getChildAt(i)).selected = false;
 			}
-			ListItem(event.target).selected = true;
+			ListItemBase(event.target).selected = true;
 			dispatchEvent(new Event(Event.SELECT));
 		}
 		
@@ -319,7 +319,6 @@ package com.bit101.components
             makeListItems();
             fillItems();
         }
-		
 		///////////////////////////////////
 		// getter/setters
 		///////////////////////////////////
@@ -427,6 +426,7 @@ package com.bit101.components
 		public function set items(value:Array):void
 		{
 			_items = value;
+			makeListItems();
 			invalidate();
 		}
 		public function get items():Array
@@ -484,6 +484,6 @@ package com.bit101.components
         public function get autoHideScrollBar():Boolean
         {
             return _scrollbar.autoHide;
-        }	
+        }
 	}
 }
