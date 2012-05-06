@@ -33,9 +33,10 @@ package com.bit101.utils
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.KeyboardEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
-	import flash.utils.getDefinitionByName;	
+	import flash.utils.getDefinitionByName;
 	
 	/**
 	 * Creates and lays out minimal components based on a simple xml format.

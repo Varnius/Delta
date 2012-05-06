@@ -3,14 +3,14 @@ package net.akimirksnis.delta.game.controllers
 	import alternativa.engine3d.controllers.SimpleObjectController;
 	import alternativa.engine3d.core.Camera3D;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
-	
 	import flash.display.InteractiveObject;
+	
+	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
+	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class FreeRoamController extends SimpleObjectController implements ICameraController
 	{
-		protected var _enabled:Boolean = true;
+		protected var _enabled:Boolean = false;
 		
 		public function FreeRoamController(
 			eventSource:InteractiveObject,
@@ -47,6 +47,9 @@ package net.akimirksnis.delta.game.controllers
 			super.object = camera;			
 		}		
 		
+		/**
+		 * Indicates whether this component is enabled.
+		 */
 		public function get enabled():Boolean
 		{
 			return _enabled;
@@ -65,6 +68,6 @@ package net.akimirksnis.delta.game.controllers
 				this.enable();
 				_enabled = true;
 			}
-		}
+		}		
 	}
 }

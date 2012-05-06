@@ -1,52 +1,51 @@
 package net.akimirksnis.delta.game.loaders.loaders
-{	
-	import flash.events.ErrorEvent;
-	import flash.events.Event;
-	import flash.events.EventDispatcher;
-	import flash.events.IOErrorEvent;
-	import flash.net.URLLoader;
-	import flash.net.URLRequest;
-
-	public class MapLoader extends EventDispatcher
+{
+	public class MapLoader extends ModelLoader
 	{
-		private var _mapsPath:String;
-		private var _mapData:XML;
-		
-		public function MapLoader(mapsPath:String)
+		/**
+		 * Class constructor.
+		 * 
+		 * @param modelPath Folder containing models.
+		 * @param modelsToLoad A list of models.
+		 */
+		public function MapLoader(mapsPath:String, mapFilename:String)
 		{
-			_mapsPath = mapsPath;
-		}
-		
-		public function loadMap(mapFile:String):void
-		{
-			var loader:PimpedURLLoader = new PimpedURLLoader();
-			loader.addEventListener(Event.COMPLETE, onMapLoaded);
-			loader.addEventListener(IOErrorEvent.IO_ERROR, onLoadingError);
-			loader.load(new URLRequest(_mapsPath + mapFile));
-		}
-		
-		private function onMapLoaded(e:Event):void
-		{
-			// Remove unneeded event listeners
-			(e.target as EventDispatcher).removeEventListener(Event.COMPLETE, onMapLoaded);
-			(e.target as EventDispatcher).removeEventListener(IOErrorEvent.IO_ERROR, onLoadingError);
+			// Load single map file
+			super(
+				mapsPath,
+				XMLList(XML('<model filename="' + mapFilename + '"/>'))
+			);
 			
-			_mapData = XML((e.target as PimpedURLLoader).data);
-			dispatchEvent(new Event(Event.COMPLETE));
 		}
 		
-		private function onLoadingError(e:ErrorEvent):void
-		{
-			// Remove unneeded event listeners
-			(e.target as EventDispatcher).removeEventListener(Event.COMPLETE, onMapLoaded);
-			(e.target as EventDispatcher).removeEventListener(IOErrorEvent.IO_ERROR, onLoadingError);
-			
-			dispatchEvent(e);
+		/*---------------------------
+		Public methods
+		---------------------------*/
+		
+		/**
+		 * Loads map.
+		 */
+		public function loadMap():void
+		{			
+			super.loadModels();
 		}
 		
-		public function get mapData():XML
-		{
-			return _mapData;
+		/*---------------------------
+		Event callbacks
+		---------------------------*/		
+		
+		/*---------------------------
+		Getters/setters
+		---------------------------*/
+		
+		/*---------------------------
+		Getters/setters
+		---------------------------*/
+		
+		public function get loadedMapData():Object
+		{			
+			super.loadedData[0].mapData = super.loadedData[0].modelData;
+			return super.loadedData[0];
 		}
 	}
 }

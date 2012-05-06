@@ -7,17 +7,15 @@ package net.akimirksnis.delta.game.controllers
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
-	import flash.events.MouseEvent;
 	
 	import net.akimirksnis.delta.game.controllers.interfaces.IController;
-	import net.akimirksnis.delta.game.core.GameCore;
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.gui.controllers.ComponentController;
 	import net.akimirksnis.delta.game.gui.controllers.DebugOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.LevelSelectionOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.OverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.utils.Utils;
 
 	public class GuiController implements IController
 	{		
@@ -30,6 +28,7 @@ package net.akimirksnis.delta.game.controllers
 		private var currentlyPressedKeys:Object = new Object();
 		private var GUIRoot:DisplayObjectContainer = new Sprite();
 		private var overlayControllers:Vector.<ComponentController> = new Vector.<ComponentController>();
+		private var previouslyEnabledController:IController;
 		
 		// Controllers
 		private var debugOverlayController:DebugOverlayController;		
@@ -47,15 +46,15 @@ package net.akimirksnis.delta.game.controllers
 			
 			// Add overlay controllers
 			
-			// Debug overlay
-			if(GameCore.DEBUG_MODE_ON)
-			{
-				debugOverlayController = new DebugOverlayController("DebugOverlayController");				
-				addOverlayController(debugOverlayController);
-			}
+			// Debug overlay			
+			debugOverlayController = new DebugOverlayController("DebugOverlayController");				
+			addOverlayController(debugOverlayController);
+			debugOverlayController.enabled = Globals.debugMode;
 			
 			// Preloader overlay
 			addOverlayController(new PreloaderOverlayController("PreloaderOverlayController"));
+			
+			// Level selection overlay
 			addOverlayController(new LevelSelectionOverlayController("LevelSelectionOverlayController"));
 			
 			attachListeners();
@@ -192,15 +191,31 @@ package net.akimirksnis.delta.game.controllers
 			{
 				if(debugOverlayController.enabled)
 				{
+					var differs:Boolean = false;
+					
 					for each(var c:IController in _fellowControllers)
 					{
-						c.enabled = true;
+						if(c.enabled)
+						{
+							differs = true;
+							break;
+						}
 					}
+					
+					if(!differs && previouslyEnabledController != null)
+					{
+						previouslyEnabledController.enabled = true;
+					}
+					
 					debugOverlayController.unfocus();
 				} else {
 					for each(c in _fellowControllers)
 					{
-						c.enabled = false;
+						if(c.enabled)
+						{
+							previouslyEnabledController = c;
+							c.enabled = false;
+						}
 					}
 					debugOverlayController.focus();
 				}			

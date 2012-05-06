@@ -16,7 +16,8 @@ package net.akimirksnis.delta.game.loaders.loaders
 	
 	public class ModelLoader extends EventDispatcher
 	{
-		private var _loadedData:Vector.<Object>;
+		protected  var _loadedData:Vector.<Object>;
+		
 		private var modelsToLoad:XMLList;
 		private var modelPath:String;
 		private var urlLoader:PimpedURLLoader;
@@ -27,6 +28,7 @@ package net.akimirksnis.delta.game.loaders.loaders
 		 * Class constructor.
 		 * 
 		 * @param modelPath Folder containing models.
+		 * @param modelsToLoad A list of models.
 		 */
 		public function ModelLoader(modelPath:String, modelsToLoad:XMLList)
 		{

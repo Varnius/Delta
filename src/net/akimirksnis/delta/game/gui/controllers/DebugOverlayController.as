@@ -15,14 +15,32 @@ package net.akimirksnis.delta.game.gui.controllers
 
 	public class DebugOverlayController extends OverlayController
 	{		
+		private var consoleTextArea:TextArea;
+		private var consoleInputText:InputText;
+		
 		public function DebugOverlayController(name:String)
 		{
 			super(DebugOverlay.view, name);
+			
+			consoleTextArea = TextArea(minco.getCompById("console_text"));
+			consoleInputText = InputText(minco.getCompById("console_input"));
+			
+			Globals.gameCore.addEventListener("command_executed", onCommandExecuted);			
 		}
 		
 		/*---------------------------
 		Public functions
+		---------------------------*/	
+		
+		/*---------------------------
+		Event callbacks
 		---------------------------*/
+		
+		public function onCommandExecuted(e:Event):void
+		{
+			consoleTextArea.text += Globals.gameCore.lastCommand + "\n";
+			consoleTextArea.text += Globals.gameCore.lastResponse.length > 0 ? Globals.gameCore.lastResponse.length + "\n" : "";
+		}
 		
 		/*---------------------------
 		Component event callbacks
@@ -34,16 +52,15 @@ package net.akimirksnis.delta.game.gui.controllers
 		 */
 		public function onConsoleSubmit(e:Event = null):void
 		{			
-			var consoleInput:InputText = minco.getCompById("console_input") as InputText;
-			executeConsoleCommand(consoleInput.text);
-			consoleInput.text = "";
+			Globals.gameCore.executeCommand(consoleInputText.text);
+			consoleInputText.text = "";
 		}
 		
 		/**
 		 * Handles console input when its input field is in focus and ENTER is pressed.
 		 * @param e Event object.
 		 */
-		private function onConsoleSubmitEnter(e:KeyboardEvent):void
+		public function onConsoleSubmitEnter(e:KeyboardEvent):void
 		{
 			// On ENTER press
 			if(e.keyCode == 13)
@@ -59,14 +76,14 @@ package net.akimirksnis.delta.game.gui.controllers
 		public function onGeometryDebugMenuSubmit(e:Event = null):void
 		{
 			(minco.getCompById("cb_show_terrain") as CheckBox).selected ? 
-				executeConsoleCommand("show_terrain 1") : 
-				executeConsoleCommand("show_terrain 0") ;
+				Globals.gameCore.executeCommand("show_terrain 1") : 
+				Globals.gameCore.executeCommand("show_terrain 0") ;
 			(minco.getCompById("cb_show_terrain_wireframe") as CheckBox).selected ? 
-				executeConsoleCommand("show_terrain_wireframe 1") : 
-				executeConsoleCommand("show_terrain_wireframe 0") ;
+				Globals.gameCore.executeCommand("show_terrain_wireframe 1") : 
+				Globals.gameCore.executeCommand("show_terrain_wireframe 0") ;
 			(minco.getCompById("cb_show_colmesh") as CheckBox).selected ? 
-				executeConsoleCommand("show_colmesh 1") : 
-				executeConsoleCommand("show_colmesh 0") ;
+				Globals.gameCore.executeCommand("show_colmesh 1") : 
+				Globals.gameCore.executeCommand("show_colmesh 0") ;
 		}
 		
 		/**
@@ -76,8 +93,8 @@ package net.akimirksnis.delta.game.gui.controllers
 		public function onUnitDebugMenuSubmit(e:Event = null):void
 		{
 			(minco.getCompById("cb_show_unit_boundboxes") as CheckBox).selected ? 
-				executeConsoleCommand("show_unit_boundboxes 1") : 
-				executeConsoleCommand("show_unit_boundboxes 0") ;
+				Globals.gameCore.executeCommand("show_unit_boundboxes 1") : 
+				Globals.gameCore.executeCommand("show_unit_boundboxes 0") ;
 		}
 		
 		/**
@@ -87,20 +104,20 @@ package net.akimirksnis.delta.game.gui.controllers
 		public function onLightsDebugMenuSubmit(e:Event = null):void
 		{
 			(minco.getCompById("cb_light_enable_ambient") as CheckBox).selected ? 
-				executeConsoleCommand("light_enable_ambient 1") : 
-				executeConsoleCommand("light_enable_ambient 0") ;
+				Globals.gameCore.executeCommand("light_enable_ambient 1") : 
+				Globals.gameCore.executeCommand("light_enable_ambient 0") ;
 			(minco.getCompById("cb_light_enable_omni") as CheckBox).selected ? 
-				executeConsoleCommand("light_enable_omni 1") : 
-				executeConsoleCommand("light_enable_omni 0") ;
+				Globals.gameCore.executeCommand("light_enable_omni 1") : 
+				Globals.gameCore.executeCommand("light_enable_omni 0") ;
 			(minco.getCompById("cb_light_enable_directional") as CheckBox).selected ? 
-				executeConsoleCommand("light_enable_directional 1") : 
-				executeConsoleCommand("light_enable_directional 0") ;
+				Globals.gameCore.executeCommand("light_enable_directional 1") : 
+				Globals.gameCore.executeCommand("light_enable_directional 0") ;
 			(minco.getCompById("cb_light_enable_spot") as CheckBox).selected ? 
-				executeConsoleCommand("light_enable_spot 1") : 
-				executeConsoleCommand("light_enable_spot 0") ;
+				Globals.gameCore.executeCommand("light_enable_spot 1") : 
+				Globals.gameCore.executeCommand("light_enable_spot 0") ;
 			(minco.getCompById("cb_show_light_sources") as CheckBox).selected ? 
-				executeConsoleCommand("show_light_sources 1") : 
-				executeConsoleCommand("show_light_sources 0") ;
+				Globals.gameCore.executeCommand("show_light_sources 1") : 
+				Globals.gameCore.executeCommand("show_light_sources 0") ;
 		}
 		
 		/**
@@ -109,7 +126,7 @@ package net.akimirksnis.delta.game.gui.controllers
 		 */
 		public function onUseFreeRoamCameraSubmit(e:Event):void
 		{
-			executeConsoleCommand("use_camera_mode 2");
+			Globals.gameCore.executeCommand("use_camera_mode 2");
 		}
 		
 		/**
@@ -118,7 +135,7 @@ package net.akimirksnis.delta.game.gui.controllers
 		 */
 		public function onUseStandartCameraSubmit(e:Event):void
 		{
-			executeConsoleCommand("use_camera_mode 1");
+			Globals.gameCore.executeCommand("use_camera_mode 1");
 		}
 		
 		/**
@@ -134,17 +151,6 @@ package net.akimirksnis.delta.game.gui.controllers
 		/*---------------------------
 		Helpers
 		---------------------------*/
-		
-		private function executeConsoleCommand(command:String):void
-		{			
-			var message:String = Globals.gameCore.executeConsoleCommand(command);			
-			TextArea(minco.getCompById("console_text")).text += command + "\n";
-			
-			if(message != "")
-			{
-				TextArea(minco.getCompById("console_text")).text += message + "\n";
-			}
-		}
 		
 		/*---------------------------
 		Getters/setters

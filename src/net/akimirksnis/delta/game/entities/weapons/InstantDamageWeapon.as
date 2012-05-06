@@ -61,7 +61,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			);
 			
 			// Find where ray from camera (along crosshair) intersects collision mesh
-			collisionMeshIntersectionData = Globals.gameCore.collisionMesh.intersectRay(origin, direction);
+			collisionMeshIntersectionData = library.map.collisionMesh.intersectRay(origin, direction);
 			if(collisionMeshIntersectionData != null)
 			{
 				// Global coords of camera-collision mesh intersection
@@ -120,7 +120,7 @@ package net.akimirksnis.delta.game.entities.weapons
 				}			
 				
 				// Intersect calculated ray with collision mesh
-				collisionMeshIntersectionData = Globals.gameCore.collisionMesh.intersectRay(origin, direction);			
+				collisionMeshIntersectionData = library.map.collisionMesh.intersectRay(origin, direction);			
 				// Ignore hit units if terrain hitpoint is closer than closes hit unit			
 				if(collisionMeshIntersectionData != null)
 				{

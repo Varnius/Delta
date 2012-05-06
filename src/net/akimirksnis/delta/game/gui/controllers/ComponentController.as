@@ -5,13 +5,14 @@ package net.akimirksnis.delta.game.gui.controllers
 
 	public class ComponentController
 	{
-		protected var minco:MinimalConfigurator = new MinimalConfigurator(this);
+		protected var minco:MinimalConfigurator;
 		protected var _component:Component;
 		private var _enabled:Boolean = true;
 		private var _name:String;
 		
 		public function ComponentController(view:XML, name:String)
 		{			
+			minco = new MinimalConfigurator(this);
 			_component = Component(minco.parseSingleComponent(view));
 			_name = name;
 		}

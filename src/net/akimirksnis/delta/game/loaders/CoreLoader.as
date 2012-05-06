@@ -8,16 +8,21 @@ package net.akimirksnis.delta.game.loaders
 	import flash.events.ProgressEvent;
 	import flash.utils.ByteArray;
 	
+	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.library.Library;
 	import net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent;
+	import net.akimirksnis.delta.game.loaders.loaders.MapLoader;
 	import net.akimirksnis.delta.game.loaders.loaders.ModelLoader;
 	import net.akimirksnis.delta.game.loaders.loaders.XMLConfigLoader;
-	import net.akimirksnis.delta.game.loaders.parsers.BinaryModelFormat;
+	import net.akimirksnis.delta.game.loaders.parsers.MapParser;
 	import net.akimirksnis.delta.game.loaders.parsers.ModelParser;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 
+	[Event(name="configsLoaded", type="net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent")]
+	[Event(name="assetsLoaded", type="net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent")]
+	[Event(name="mapLoaded", type="net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent")]
 	public class CoreLoader extends EventDispatcher
 	{
 		private var XMLPaths:Array;
@@ -30,20 +35,20 @@ package net.akimirksnis.delta.game.loaders
 		
 		// Asset load progress
 		private var assetLoadStatus:Object =
-			{
-				models: 	false,
-				sprites: 	false,
-				materials: 	false,				
-				animations: true,
-				sounds: 	true			
-			};
+		{
+			models: 	false,
+			sprites: 	false,
+			materials: 	false,				
+			animations: true,
+			sounds: 	true			
+		};
 		
 		// Map load progress
 		private var mapLoadStatus:Object =
-			{
-				geometry: 	false,
-				materials:  false
-			};
+		{
+			geometry: 	false,
+			materials:  false
+		};
 		
 		// Preloader
 		private var preloader:PreloaderOverlayController;
@@ -56,10 +61,10 @@ package net.akimirksnis.delta.game.loaders
 		 * @param XMLPaths An array containing paths to XML files to load.
 		 * @param library Reference to the library object.
 		 */
-		public function CoreLoader(XMLPaths:Array, library:Library, preloader:PreloaderOverlayController)
+		public function CoreLoader(XMLPaths:Array, preloader:PreloaderOverlayController)
 		{
 			this.XMLPaths = XMLPaths;
-			this.library = library;
+			this.library = Library.instance;
 			this.preloader = preloader;			
 		}
 		
@@ -80,6 +85,7 @@ package net.akimirksnis.delta.game.loaders
 				totalSteps++;
 			}
 			
+			// +1 for config laoding
 			totalSteps++;
 			
 			// Load XML configs
@@ -93,13 +99,28 @@ package net.akimirksnis.delta.game.loaders
 		}
 		
 		/**
-		 * Load map.
+		 * Loads map.
 		 * 
-		 * @param mapID Id of a map that will be loaded.
+		 * @param Filename of a map to load.
 		 */
-		public function loadMap(mapID:String):void
+		public function loadMap(filename:String):void
 		{
-			// Load map derpy
+			currentStep = totalSteps = 0;
+			
+			// Calculate number of loading steps
+			for(var property:String in mapLoadStatus)
+			{
+				totalSteps++;
+			}
+			
+			// Update preloader
+			preloader.focus();
+			preloader.text = "Loading map...";
+			
+			// Load map
+			var mapLoader:MapLoader = new MapLoader(Globals.LOCAL_ROOT + Globals.MAP_DIR, filename);
+			mapLoader.addEventListener(Event.COMPLETE, onMapLoaded, false, 0, true);
+			mapLoader.loadMap();
 		}
 		
 		/**
@@ -124,7 +145,7 @@ package net.akimirksnis.delta.game.loaders
 		}
 		
 		/*---------------------------
-		Asset loading callbacks
+		Asset loading event callbacks
 		---------------------------*/
 		
 		/**
@@ -153,24 +174,14 @@ package net.akimirksnis.delta.game.loaders
 					}	
 				);
 			}
-			
-			for(var j:int = 0; j < 50; j++)
-			{
-				library.mapData.push(
-					{
-						name: 'derpy' + j,
-						filename: 'fname',
-						skybox: 'xxx'
-					}	
-				);
-			}
 
 			// Load models
 			var modelLoader:ModelLoader = new ModelLoader(Globals.LOCAL_ROOT + Globals.MODEL_DIR, _configs[0].models.model);
 			modelLoader.addEventListener(Event.COMPLETE, onModelsLoaded, false, 0, true);
 			modelLoader.loadModels();
 			
-			// Load sounds	
+			// Load sounds
+			// ...
 		}
 		
 		/**
@@ -205,13 +216,13 @@ package net.akimirksnis.delta.game.loaders
 						currentModels = modelParser.parseBinaryModel(
 							ByteArray(model.modelData),
 							model.dataFormat,
-							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + modelMaterialsDir + "/" + model.fileName,
+							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + modelMaterialsDir + "/",
 							library.animations
 						);
 					} else {						
 						currentModels = modelParser.parseColladaModel(
 							XML(model.modelData),
-							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + modelMaterialsDir + "/" + model.fileName,
+							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + modelMaterialsDir + "/",
 							library.animations,
 							library.properties
 						);
@@ -329,7 +340,7 @@ package net.akimirksnis.delta.game.loaders
 					
 					preloader.unfocus();
 					dispatchEvent(new Event(CoreLoaderEvent.ASSETS_LOADED));				
-					trace("[CoreLoader] > All assets loaded");
+					trace("[CoreLoader] > All assets loaded.");
 				}
 			}
 			
@@ -337,8 +348,91 @@ package net.akimirksnis.delta.game.loaders
 		}
 		
 		/*---------------------------
-		Map loading callbacks
+		Map loading event callbacks
 		---------------------------*/
+		
+		/**
+		 * Fired after map geometry is loaded.
+		 * 
+		 * @param e Event object.
+		 */
+		private function onMapLoaded(e:Event):void
+		{			
+			var loader:MapLoader = MapLoader(e.currentTarget);
+			var rawMap:Object = loader.loadedMapData;
+			var mapParser:MapParser = new MapParser();
+			var map:GameMap;
+			
+			loader.removeEventListener(Event.COMPLETE, onModelsLoaded);			
+			
+			try {							
+				trace("[CoreLoader] > Parsing map:", rawMap.fileName);
+				
+				// Get filename without extension (since the file is in a directory of this name)
+				var mapFilenameNoExtension:String = Utils.trimExtension(rawMap.fileName);
+				
+				// Determine whether map data is binary (A3D) or text (Collada) and parse				
+				if(rawMap.binary)
+				{
+					// todo:binary
+					/*mapParser.parseBinaryMap(
+						ByteArray(map.modelData),
+						map.dataFormat,
+						Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MAPS + mapMaterialsDir + "/",
+						library.animations
+					);*/
+				} else {						
+					map = new GameMap(
+						mapParser.parseColladaMap(
+							XML(rawMap.mapData),
+							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MAPS + mapFilenameNoExtension + "/"
+						)
+					);
+					
+					map.name = mapFilenameNoExtension;
+					library.map = map;
+				}
+				
+				trace("-------");
+				
+				// Load materials
+				mapParser.addEventListener(ProgressEvent.PROGRESS, onMapMaterialLoadingProgress, false, 0, true);
+				mapParser.addEventListener(Event.COMPLETE, onMapMaterialLoadingComplete, false, 0, true);
+				mapParser.loadMaterials();
+				
+				mapLoadStatus.geometry = true;
+				onMapLoadPartComplete();
+				
+			} catch(e:Error) {
+				trace("[CoreLoader] > Error cought: " + e.message + ".\n" + e.getStackTrace());
+			}			
+		}
+		
+		/**
+		 * Called after each map material is loaded.
+		 * 
+		 * @param e Event object.
+		 */
+		private function onMapMaterialLoadingProgress(e:ProgressEvent):void
+		{
+			trace("[CoreLoader] > Map material", e.bytesLoaded, "of", e.bytesTotal, "loaded");
+		}		
+		
+		/**
+		 * Called when map materials are loaded.
+		 * 
+		 * @param e Event object.
+		 */
+		private function onMapMaterialLoadingComplete(e:Event):void
+		{
+			(e.target as EventDispatcher).removeEventListener(ProgressEvent.PROGRESS, onMaterialLoadingProgress);
+			(e.target as EventDispatcher).removeEventListener(Event.COMPLETE, onMaterialLoadingComplete);
+			
+			trace("[CoreLoader] > All map materials loaded");
+			
+			mapLoadStatus.materials = true;
+			onMapLoadPartComplete();		
+		}
 		
 		/**
 		 * Dispatches CoreLoaderEvent.ASSETS_LOADED event if all assets are loaded.
@@ -365,7 +459,7 @@ package net.akimirksnis.delta.game.loaders
 				}
 				
 				dispatchEvent(new Event(CoreLoaderEvent.MAP_LOADED));
-				trace("[CoreLoader] > Map loaded");
+				trace("[CoreLoader] > Map loaded.");
 			}
 			
 			result = true;
@@ -374,11 +468,6 @@ package net.akimirksnis.delta.game.loaders
 		private function updatePreloaderStep():void
 		{
 			preloader.value = 100 / totalSteps * currentStep;
-			trace(100 / totalSteps * currentStep, "curr:", currentStep);
 		}
-		
-		/*---------------------------
-		Getters/setters
-		---------------------------*/
 	}
 }

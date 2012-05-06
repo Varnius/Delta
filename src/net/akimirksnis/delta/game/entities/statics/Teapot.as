@@ -3,12 +3,13 @@ package net.akimirksnis.delta.game.entities.statics
 	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.objects.Mesh;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.utils.Utils;
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.weapons.SMG;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
+	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.utils.Globals;
+	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class Teapot extends Entity
 	{		
@@ -37,7 +38,7 @@ package net.akimirksnis.delta.game.entities.statics
 			_type = EntityType.STATIC_TEAPOT;
 			
 			// Set entity model
-			setupModel(Globals.library.getObjectByName(EntityType.STATIC_TEAPOT).clone() as Mesh);
+			setupModel(Library.instance.getObjectByName(EntityType.STATIC_TEAPOT).clone() as Mesh);
 			
 			// Set unique name
 			_namex = type + _count;

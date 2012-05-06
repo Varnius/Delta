@@ -3,11 +3,12 @@ package net.akimirksnis.delta.game.entities.units
 	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.objects.Mesh;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.utils.Utils;
 	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.weapons.SMG;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
+	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.utils.Globals;
+	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class Walker2 extends Unit
 	{		
@@ -40,7 +41,7 @@ package net.akimirksnis.delta.game.entities.units
 			_type = EntityType.UNIT_WALKER2;
 			
 			// Set entity model
-			setupModel(Globals.library.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);
+			setupModel(Library.instance.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);
 			
 			// Set unique name
 			_namex = type + _count;

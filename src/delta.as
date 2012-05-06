@@ -2,7 +2,7 @@ package
 {
 	import flash.display.Sprite;
 	import flash.display.*;
-	import net.akimirksnis.delta.game.core.GameCore;	
+	import net.akimirksnis.delta.game.core.Core;	
 	import net.akimirksnis.delta.game.utils.Globals;
 	
 	[SWF(width="1280", height="720", frameRate="60")]
@@ -17,7 +17,8 @@ package
 			Globals.stage = stage;
 			Globals.stage3D = stage.stage3Ds[0];
 			
-			var core:GameCore = new GameCore();
+			var core:Core = Core.instance;
+			core.init();
 		}
 	}
 }

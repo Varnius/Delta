@@ -9,12 +9,13 @@ package net.akimirksnis.delta.game.entities
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.core.GameCore;
-	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;
-	
 	import flash.events.EventDispatcher;
 	import flash.geom.Vector3D;
+	
+	import net.akimirksnis.delta.game.core.Core;
+	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;
+	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class Entity extends EventDispatcher
 	{
@@ -28,13 +29,13 @@ package net.akimirksnis.delta.game.entities
 		protected var _namex:String = "default_entity_name";		
 		// Debug
 		protected var _showBoundBox:Boolean = false;
-		protected var _boundBoxWireframe:WireFrame;
-		
-		//Animation properties
-		
+		protected var _boundBoxWireframe:WireFrame;		
+		//Animation properties		
 		protected var aniController:AnimationController;
 		protected var aniSwitcher:AnimationSwitcher;
 		protected var currentAnimation:String;
+		
+		protected var library:Library = Library.instance;
 		
 		public function Entity()
 		{

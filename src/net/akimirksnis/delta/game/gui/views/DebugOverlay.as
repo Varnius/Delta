@@ -11,7 +11,7 @@ package net.akimirksnis.delta.game.gui.views
 						<VBox left="5" right="5" top="5" bottom="5">
 							<TextArea id="console_text" left="0" right="0" top="0" bottom="45" stickToBottom="true" />
 							<HBox bottom="5" left="0" right="0">
-								<InputText id="console_input" left="0" right="105" event="key_up:onConsoleSubmitEnter"/>
+								<InputText id="console_input" left="0" right="105" event="keyUp:onConsoleSubmitEnter"/>
 								<PushButton label="Submit" right="0" event="click:onConsoleSubmit"/>
 							</HBox>
 						</VBox>

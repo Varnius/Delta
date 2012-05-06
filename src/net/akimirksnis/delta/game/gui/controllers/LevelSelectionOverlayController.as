@@ -1,10 +1,12 @@
 package net.akimirksnis.delta.game.gui.controllers
 {
 	import com.bit101.components.List;
-	import com.bit101.components.StandartListItem;
+	
+	import flash.events.Event;
 	
 	import net.akimirksnis.delta.game.gui.components.LevelListItem;
 	import net.akimirksnis.delta.game.gui.views.LevelSelectionOverlay;
+	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class LevelSelectionOverlayController extends OverlayController
 	{
@@ -25,6 +27,11 @@ package net.akimirksnis.delta.game.gui.controllers
 		/*---------------------------
 		Component event callbacks
 		---------------------------*/
+		
+		public function onLoadButtonClick(e:Event):void
+		{
+			Globals.gameCore.executeCommand("loadmap " + levelList.selectedItem.filename);
+		}
 		
 		/*---------------------------
 		Helpers

@@ -29,17 +29,22 @@ package com.bit101.components
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.FocusEvent;
+	import flash.events.KeyboardEvent;
 	import flash.text.TextField;
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
 	
+	[Event(name="change", type="flash.events.Event")]
+	[Event(name="focus_in", type="flash.events.FocusEvent")]
+	[Event(name="focus_out", type="flash.events.FocusEvent")]
 	public class InputText extends Component
 	{
 		protected var _back:Sprite;
 		protected var _password:Boolean = false;
 		protected var _text:String = "";
 		protected var _tf:TextField;
-		
+
 		/**
 		 * Constructor
 		 * @param parent The parent DisplayObjectContainer on which to add this InputText.
@@ -81,8 +86,7 @@ package com.bit101.components
 			_tf.type = TextFieldType.INPUT;
 			_tf.defaultTextFormat = new TextFormat(Style.fontName, Style.fontSize, Style.INPUT_TEXT);
 			addChild(_tf);
-			_tf.addEventListener(Event.CHANGE, onChange);
-			
+			_tf.addEventListener(Event.CHANGE, onChange);		
 		}
 		
 		///////////////////////////////////
@@ -124,10 +128,7 @@ package com.bit101.components
 			_tf.x = 2;
 			_tf.y = Math.round(_height / 2 - _tf.height / 2);
 		}
-		
-		
-		
-		
+
 		///////////////////////////////////
 		// event handlers
 		///////////////////////////////////
@@ -142,9 +143,6 @@ package com.bit101.components
 			event.stopImmediatePropagation();
 			dispatchEvent(event);
 		}
-		
-		
-		
 		
 		///////////////////////////////////
 		// getter/setters

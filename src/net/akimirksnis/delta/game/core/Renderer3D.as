@@ -1,30 +1,29 @@
 package net.akimirksnis.delta.game.core
 {	
 	import alternativa.engine3d.core.*;
-	import alternativa.engine3d.core.Resource;
 	import alternativa.engine3d.core.events.MouseEvent3D;
 	import alternativa.engine3d.lights.*;
-	import alternativa.engine3d.loaders.TexturesLoader;
-	import alternativa.engine3d.loaders.events.TexturesLoaderEvent;
-	import alternativa.engine3d.materials.FillMaterial;
-	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.Sprite3D;
-	import alternativa.engine3d.primitives.Box;
-	import alternativa.engine3d.resources.ExternalTextureResource;
-	import alternativa.engine3d.resources.Geometry;
-	
-	import net.akimirksnis.delta.game.utils.Globals;
 	
 	import flash.display.Stage;
 	import flash.display.Stage3D;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	
+	import net.akimirksnis.delta.game.debug.LightDebugSprite;
+	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.utils.Globals;
 
 	/**
 	* Renderer3D class. Manages rendering 3D content
 	*/
 	public class Renderer3D extends EventDispatcher
 	{
+		private static var _allowInstantiation:Boolean = false;
+		private static var _instance:Renderer3D = new Renderer3D(SingletonLock); 
+		
+		private var library:Library = Library.instance;
+		
 		// Current camera
 		private var _camera:Camera3D;
 		// Reference to the stage
@@ -36,47 +35,6 @@ package net.akimirksnis.delta.game.core
 		// Mark lights
 		private var _markLights:Boolean = false;
 		
-		/*---------------------------
-		Getters/setters
-		---------------------------*/
-		
-		/**
-		 * Camera mode used for rendering.
-		 */
-		public function get camera():Camera3D {return _camera;}
-		
-		/**
-		 * @private
-		 */
-		public function set camera(camera:Camera3D):void
-		{
-			if(_camera != null)
-			{
-				// Remove view and diagram
-				stage.removeChild(_camera.view);
-				stage.removeChild(_camera.diagram);
-				
-				// Remove camera itself
-				//_mainContainer.removeChild(_camera);
-			}			
-			_camera = camera;
-			
-			// Attach camera to the main containers
-			//_mainContainer.addChild(_camera);
-			
-			// Attach camera output to the stage
-			stage.addChild(_camera.view);
-			stage.addChild(_camera.diagram);
-			
-			// Resize stage if necessary
-			onStageResize(null);
-		}
-		
-		/**
-		 * Main container with all other objects in the scene attached. Root of object3D hierarchy tree.
-		 */
-		public function get mainContainer():Object3D {return _mainContainer;}
-		
 		/**
 		 * Creates new instance of this class.
 		 * 
@@ -84,10 +42,15 @@ package net.akimirksnis.delta.game.core
 		 * @param cameraMode reference to CameraMode object of needed type
 		 * @return New instance of this class.
 		 */
-		public function Renderer3D(stage3D:Stage3D)
+		public function Renderer3D(lock:Class)
 		{
+			if(lock != SingletonLock)
+			{
+				throw new Error("The class 'Renderer3D' is singleton. Use 'Core.instance'.");
+			}
+			
 			stage = Globals.stage;
-			this.stage3D = stage3D;
+			this.stage3D = Globals.stage3D;
 			
 			// Create main container
 			_mainContainer = new Object3D();	
@@ -233,39 +196,51 @@ package net.akimirksnis.delta.game.core
 		public function set debugLights(mark:Boolean):void
 		{
 			var l:Light3D;
-			var sprite:Object3D;
+			var sprite:LightDebugSprite;
 			
 			if(mark && !_markLights)
 			{
 				_markLights = true;
 				
 				// Add markers for different light types
-				for each(l in Globals.library.lights)
+				for each(l in library.lights)
 				{
 					if(l is DirectionalLight)
 					{
-						sprite = Globals.library.getObjectByName("sprite_directionallight").clone();
-						l.addChild(sprite);
+						//sprite = library.getObjectByName("sprite_directionallight").clone();
+						sprite = new LightDebugSprite(library.getObjectByName("sprite_directionallight") as Sprite3D);
+						l.parent.addChild(sprite);
+						sprite.x = l.x;
+						sprite.y = l.y;
+						sprite.z = l.z;
+						sprite.parentLight = l;
 					}
 					
 					if(l is OmniLight)
 					{
-						sprite = Globals.library.getObjectByName("sprite_omnilight").clone();
-						l.addChild(sprite);
+						sprite = new LightDebugSprite(library.getObjectByName("sprite_omnilight") as Sprite3D);
+						l.parent.addChild(sprite);
+						sprite.x = l.x;
+						sprite.y = l.y;
+						sprite.z = l.z;
+						sprite.parentLight = l;
 					}
 					
 					if(l is SpotLight)
 					{
-						sprite = Globals.library.getObjectByName("sprite_spotlight").clone();
-						l.addChild(sprite);
-					}
-					
-					sprite.useHandCursor = true;
+						sprite = new LightDebugSprite(library.getObjectByName("sprite_spotlight") as Sprite3D);
+						l.parent.addChild(sprite);
+						sprite.x = l.x;
+						sprite.y = l.y;
+						sprite.z = l.z;
+						sprite.parentLight = l;
+					}					
 					
 					// Add switch listeners
 					if(!(l is AmbientLight))
 					{
-						l.addEventListener(MouseEvent3D.CLICK, onLightClick, false, 0, true);
+						sprite.addEventListener(MouseEvent3D.CLICK, onLightClick, false, 0, true);
+						sprite.useHandCursor = true;
 					}
 				}
 			} 
@@ -275,30 +250,30 @@ package net.akimirksnis.delta.game.core
 				_markLights = false;
 				
 				// Remove markers for different light types
-				for each(l in Globals.library.lights)
+				for each(l in library.lights)
 				{
 					if(l is DirectionalLight)
 					{
-						sprite = l.getChildByName("sprite_directionallight");
-						l.removeChild(sprite);
+						sprite = l.parent.getChildByName("sprite_directionallight") as LightDebugSprite;
+						l.parent.removeChild(sprite);
 					}
 					
 					if(l is OmniLight)
 					{
-						sprite = l.getChildByName("sprite_omnilight");
-						l.removeChild(sprite);
+						sprite = l.parent.getChildByName("sprite_omnilight") as LightDebugSprite;
+						l.parent.removeChild(sprite);
 					}
 					
 					if(l is SpotLight)
 					{
-						sprite = l.getChildByName("sprite_spotlight");
-						l.removeChild(sprite);
+						sprite = l.parent.getChildByName("sprite_spotlight") as LightDebugSprite;
+						l.parent.removeChild(sprite);
 					}
 					
 					// Remove switch listeners
 					if(!(l is AmbientLight))
 					{
-						l.removeEventListener(MouseEvent3D.CLICK, onLightClick, false);
+						sprite.removeEventListener(MouseEvent3D.CLICK, onLightClick, false);
 					}
 				}
 			}
@@ -306,14 +281,14 @@ package net.akimirksnis.delta.game.core
 		
 		private function onLightClick(e:Event):void
 		{
-			var la:Light3D = (e.target as Sprite3D).parent as Light3D;
+			var la:Light3D = (e.target as LightDebugSprite).parentLight;
 			
-			if(la.intensity == 0)
+			if(!la.visible)
 			{
-				la.intensity = 1;
+				la.visible = true;
 				trace('[Renderer3D] Light enabled.');
 			} else {
-				la.intensity = 0;
+				la.visible = false;
 				trace('[Renderer3D] Light disabled.');
 			}
 		}
@@ -331,5 +306,62 @@ package net.akimirksnis.delta.game.core
 				_camera.view.height = stage.stageHeight;
 			}			
 		}
+		
+		/*---------------------------
+		Getters/setters
+		---------------------------*/
+		
+		/**
+		 * Class instance.
+		 */
+		public static function get instance():Renderer3D
+		{			
+			return _instance;
+		}
+		
+		/**
+		 * Camera mode used for rendering.
+		 */
+		public function get camera():Camera3D
+		{
+			return _camera;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set camera(camera:Camera3D):void
+		{
+			if(_camera != null)
+			{
+				// Remove view and diagram
+				stage.removeChild(_camera.view);
+				stage.removeChild(_camera.diagram);
+				
+				// Remove camera itself
+				//_mainContainer.removeChild(_camera);
+			}			
+			_camera = camera;
+			
+			// Attach camera to the main containers
+			//_mainContainer.addChild(_camera);
+			
+			// Attach camera output to the stage
+			stage.addChild(_camera.view);
+			stage.addChild(_camera.diagram);
+			
+			// Resize stage if necessary
+			onStageResize(null);
+		}
+		
+		/**
+		 * Main container with all other objects in the scene attached. Root of object3D hierarchy tree.
+		 */
+		public function get mainContainer():Object3D
+		{
+			return _mainContainer;
+		}
 	}
 }
+
+class SingletonLock {}

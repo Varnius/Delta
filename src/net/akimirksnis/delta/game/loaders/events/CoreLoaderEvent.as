@@ -4,9 +4,9 @@ package net.akimirksnis.delta.game.loaders.events
 	
 	public class CoreLoaderEvent extends Event
 	{
-		public static const CONFIGS_LOADED:String = "configs_loaded";
-		public static const ASSETS_LOADED:String = "assets_loaded";
-		public static const MAP_LOADED:String = "map_loaded";
+		public static const CONFIGS_LOADED:String = "configsLoaded";
+		public static const ASSETS_LOADED:String = "assetsLoaded";
+		public static const MAP_LOADED:String = "mapLoaded";
 		
 		public function CoreLoaderEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{

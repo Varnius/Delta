@@ -8,7 +8,7 @@ package net.akimirksnis.delta.game.utils
 	import net.akimirksnis.delta.game.controllers.GuiController;
 	import net.akimirksnis.delta.game.controllers.IsometricController;
 	import net.akimirksnis.delta.game.controllers.interfaces.IController;
-	import net.akimirksnis.delta.game.core.GameCore;
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.core.Renderer3D;
 	import net.akimirksnis.delta.game.library.Library;
 
@@ -32,14 +32,13 @@ package net.akimirksnis.delta.game.utils
 		// Globals that need assigning a value before using
 		public static var stage:Stage;
 		public static var stage3D:Stage3D;
-		public static var gameCore:GameCore;
+		public static var gameCore:Core;
 		public static var renderer:Renderer3D;
-		public static var library:Library;
 		public static var guiController:GuiController;
 		public static var cameraController:IController;
 		public static var GUIRoot:DisplayObjectContainer;
 		
 		// Global debug mode
-		public static var debugMode:Boolean = false;
+		public static var debugMode:Boolean = true;
 	}
 }

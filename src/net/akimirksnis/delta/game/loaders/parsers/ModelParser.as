@@ -1,7 +1,6 @@
 package net.akimirksnis.delta.game.loaders.parsers
 {
 	import alternativa.engine3d.animation.AnimationClip;
-	import alternativa.engine3d.animation.keys.Track;
 	import alternativa.engine3d.core.*;
 	import alternativa.engine3d.lights.*;
 	import alternativa.engine3d.loaders.*;
@@ -12,12 +11,9 @@ package net.akimirksnis.delta.game.loaders.parsers
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.ProgressEvent;
-	import flash.geom.Vector3D;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	
-	import net.akimirksnis.delta.game.core.Renderer3D;
-	import net.akimirksnis.delta.game.loaders.loaders.ModelLoader;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
@@ -42,7 +38,7 @@ package net.akimirksnis.delta.game.loaders.parsers
 		}
 		
 		/*---------------------------
-		Parsing
+		Public methods
 		---------------------------*/
 		
 		/**
@@ -51,7 +47,7 @@ package net.akimirksnis.delta.game.loaders.parsers
 		 * @param modelXML Model file as XML.
 		 * @param materialsPath Materials directory path.
 		 * @param animationDictionary Dictionary for storing Object3D - AnimationClip pairs.
-		 * @param propertyDictionary Dictionary for storing properties of pared objects.
+		 * @param propertyDictionary Dictionary for storing properties of parsed objects.
 		 * 
 		 * @return Vector containing parsed objects.
 		 */
@@ -79,7 +75,7 @@ package net.akimirksnis.delta.game.loaders.parsers
 			{			
 				if(o is Mesh)  
 				{
-					meshVectorTemp.push(o);
+					meshVectorTemp.push(o);					
 				}
 				
 				if(o is Skin)  
@@ -87,7 +83,7 @@ package net.akimirksnis.delta.game.loaders.parsers
 					skinVectorTemp.push(o);
 				}
 				
-				if(o is Mesh && o is Skin)
+				if(o is Mesh || o is Skin)
 				{
 					result.push(o);
 				}
@@ -111,7 +107,6 @@ package net.akimirksnis.delta.game.loaders.parsers
 			for each(var skin:Skin in skinVectorTemp)
 			{
 				animationDictionary[skin] = parser.getAnimationByObject(skin);
-				trace(parser.getAnimationByObject(skin).objects);
 			}
 			
 			// Copy user defined properties
@@ -199,10 +194,10 @@ package net.akimirksnis.delta.game.loaders.parsers
 			// todo:parse animations by object, not working now
 			for each(var ani:AnimationClip in parser.animations)
 			{				
-				for(var i:int = 0; i < ani.numTracks; i++)
+				/*for(var i:int = 0; i < ani.numTracks; i++)
 				{
 					trace("track for obj: ",ani.getTrackAt(i).object);
-				}
+				}*/
 			
 				for each(var obj:Object3D in ani.objects)
 				{					
@@ -218,112 +213,6 @@ package net.akimirksnis.delta.game.loaders.parsers
 			parser.clean();
 			
 			return result;
-		}
-		
-		/**
-		 * Parses Collada map.
-		 * 
-		 * @param fileData Model file contents as XML.
-		 * @param materialsPath Materials directory path.
-		 * @param meshVector Vector for storing meshes ( models).
-		 * @param lightVector Vector for storing lights.
-		 * @param mapMeshVector Vector for storing map meshes.
-		 * @param ignoreAmbientLighting Indicates, whether parse ambient lights.
-		 */
-		public  function parseMap(
-			fileData:XML,
-			materialsPath:String,
-			meshVector:Vector.<Mesh>,
-			lightVector:Vector.<Light3D>,
-			mapMeshVector:Vector.<Mesh>,
-			mapObjectVector:Vector.<Object3D>,
-			ignoreAmbientLighting:Boolean = true
-		):void
-		{
-			var currentMesh:Mesh;
-			var parser:DeltaParserCollada = new DeltaParserCollada();
-			var meshVectorTemp:Vector.<Mesh> = new Vector.<Mesh>();
-			
-			// Parse file and trim filepaths to textures
-			parser.parse(fileData, materialsPath, true);			
-			
-			// Trace some info
-			trace("[ModelParser] > Objects in map file: " + parser.objects);
-			trace("[ModelParser] > Materials in map file: " + parser.materials);
-			trace("[ModelParser] > Lights in map file: " + parser.lights);
-			
-			// Push objects to vectors
-			for each(var o:* in parser.objects)
-			{				
-				if((o is Object3D))  
-				{
-					//mapObjectVector.push(o);
-				}
-				
-				// Ambient lights				
-				if((o is AmbientLight) && !ignoreAmbientLighting)  
-				{
-					lightVector.push(o);
-				}
-				
-				// Directional lights
-				if(o is DirectionalLight)  
-				{
-					// Parser bugs??
-					var la:DirectionalLight = o as DirectionalLight;
-					var nla:DirectionalLight = new DirectionalLight(la.color);
-					nla.x = la.x;
-					nla.y = la.y;
-					nla.z = la.z;
-					nla.rotationX = la.rotationX;
-					nla.rotationY = la.rotationZ;
-					nla.rotationZ = la.rotationZ;
-					nla.intensity = la.intensity;					
-					lightVector.push(nla);
-				}
-				
-				// Omnilights
-				if(o is OmniLight)  
-				{
-					lightVector.push(o);  
-				}							 
-				
-				// Spotlights
-				if(o is SpotLight)  
-				{					
-					lightVector.push(o);
-				}
-				
-				// Meshes				
-				if(o is Mesh)  
-				{     
-					meshVector.push(o);
-					meshVectorTemp.push(o);
-					mapMeshVector.push(o);
-				}
-			}
-			
-			// Parse meshes - upload geometry and initiate mesh texture loading  
-			for each(var mesh:Mesh in meshVectorTemp)
-			{
-				var properties:Object = parser.getPropertiesByObject(mesh);
-				var lightPerVertex:Boolean, geometryOnly:Boolean;
-				
-				// Light mesh per vertex?
-				(properties != null && properties["lightingPrecision"] == "vertex") ? lightPerVertex = true : lightPerVertex = false;
-				
-				// Skip collision mesh (???)
-				if(mesh.name == "collision_mesh_root")
-				{
-					continue;
-				}
-				
-				// Parse mesh
-				parseMesh(mesh, lightPerVertex, geometryOnly);
-			}
-			
-			// Clean parser data
-			parser.clean();
 		}
 		
 		/**
@@ -367,7 +256,7 @@ package net.akimirksnis.delta.game.loaders.parsers
 		 * @param mesh Mesh to parse.
 		 * @param useVertexLightMaterial Indicates the type of material to apply to the mesh - Standart or VertexLight.
 		 */
-		private function parseMesh(mesh:Mesh, useVertexLightMaterial:Boolean = false, geometryOnly:Boolean = false):void
+		protected function parseMesh(mesh:Mesh, useVertexLightMaterial:Boolean = false, geometryOnly:Boolean = false):void
 		{			
 			// Upload mesh geometry to context3D
 			uploadResources(mesh.getResources(false, Geometry));      
@@ -468,11 +357,11 @@ package net.akimirksnis.delta.game.loaders.parsers
 		}
 		
 		/**
-		 * Uploads textures from file to VGA.
+		 * Adds in-file textures to loading queue.
 		 * 
 		 * @param textures Resource ExternalTextureResource vector.
 		 */
-		private function addToLoadingQueue(textures:Vector.<ExternalTextureResource>):void
+		protected function addToLoadingQueue(textures:Vector.<ExternalTextureResource>):void
 		{
 			resourceLoader.addResources(textures);
 			materialsTotal += textures.length;

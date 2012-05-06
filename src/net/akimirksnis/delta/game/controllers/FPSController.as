@@ -24,7 +24,7 @@ package net.akimirksnis.delta.game.controllers
 	import net.akimirksnis.delta.game.cameras.IsometricCamera;
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
 	import net.akimirksnis.delta.game.controllers.interfaces.IController;
-	import net.akimirksnis.delta.game.core.GameCore;
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.entities.AnimationType;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;
@@ -133,7 +133,7 @@ package net.akimirksnis.delta.game.controllers
 			{				
 				velocityFromInput.x = -1;
 			}
-			// or D
+				// or D
 			else if(currentlyPressedKeys[68])
 			{				
 				velocityFromInput.x = 1;
@@ -146,7 +146,7 @@ package net.akimirksnis.delta.game.controllers
 			{				
 				velocityFromInput.y = 1;
 			}			
-			// or S	
+				// or S	
 			else if(currentlyPressedKeys[83])
 			{				
 				velocityFromInput.y = -1;
@@ -247,9 +247,11 @@ package net.akimirksnis.delta.game.controllers
 				if(Globals.stage.displayState == StageDisplayState.NORMAL)
 				{
 					Globals.stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
-					Globals.stage.mouseLock = true;
+					enableMouseLock();
 				} else {
 					Globals.stage.displayState = StageDisplayState.NORMAL;
+					// Flash disables mouse lock automatically
+					//disableMouseLock();
 				}
 			}
 		}
@@ -282,6 +284,28 @@ package net.akimirksnis.delta.game.controllers
 		{		
 			//gameCursor.visible = false;
 			//Mouse.show();
+		}
+		
+		/**
+		 * Enables mouse lock if possible.
+		 */
+		private function enableMouseLock():void
+		{
+			if(Globals.stage.displayState == StageDisplayState.FULL_SCREEN_INTERACTIVE || Globals.stage.displayState == StageDisplayState.FULL_SCREEN)
+			{
+				Globals.stage.mouseLock = true;				
+			}
+		}
+		
+		/**
+		 * Disables mouse lock.
+		 */
+		private function disableMouseLock():void
+		{
+			if(Globals.stage.mouseLock)
+			{
+				Globals.stage.mouseLock = false;				
+			}
 		}
 		
 		/*---------------------------
@@ -366,14 +390,16 @@ package net.akimirksnis.delta.game.controllers
 				detachListeners();
 				disableGameCursor();
 				invalidateInput();
-				//_followUnit.model.visible = true;
-				_enabled = false;
+				disableMouseLock();
+				//_followUnit.model.visible = true;	
+				_enabled = false;				
 			} else if(!_enabled && value)
 			{
 				attachListeners();
 				enableGameCursor();
-				//_followUnit.model.visible = false;
-				_enabled = true;
+				enableMouseLock();
+				_followUnit.model.visible = false;
+				_enabled = true;				
 			}			
 		}
 		
@@ -387,10 +413,13 @@ package net.akimirksnis.delta.game.controllers
 			{
 				_followUnit = value;
 				_followUnit.model.addChild(_camera);
-				_camera.z += _followUnit.model.boundBox.maxZ * 0.75;
+				_camera.z += _followUnit.model.boundBox.maxZ * 0.95;
 				_followUnit.model.visible = false;
-				//_camera.z += _followUnit.model.boundBox.maxZ * 3;
-				//_camera.y += _followUnit.model.boundBox.maxZ * 3;				
+				
+				// todo
+				//_camera.z += _followUnit.model.boundBox.maxZ * 3;				
+				//_camera.y += _followUnit.model.boundBox.maxZ * 3;
+				
 				if(!_enabled)
 				{
 					this.enabled = true;

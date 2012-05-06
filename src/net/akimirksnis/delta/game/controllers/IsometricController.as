@@ -24,7 +24,7 @@ package net.akimirksnis.delta.game.controllers
 	import net.akimirksnis.delta.game.cameras.IsometricCamera;
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
 	import net.akimirksnis.delta.game.controllers.interfaces.IController;
-	import net.akimirksnis.delta.game.core.GameCore;
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.entities.AnimationType;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;

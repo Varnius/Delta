@@ -8,11 +8,13 @@ package net.akimirksnis.delta.game.library
 	import alternativa.engine3d.objects.Sprite3D;
 	
 	import flash.utils.Dictionary;
+	
+	import net.akimirksnis.delta.game.core.GameMap;
 
 	public class Library
 	{
 		private static var _allowInstantiation:Boolean = false;
-		private static var _instance:Library;
+		private static var _instance:Library;	
 		
 		/*---------------------------
 		Objects
@@ -22,8 +24,9 @@ package net.akimirksnis.delta.game.library
 		private var _skins:Vector.<Skin> = new Vector.<Skin>();
 		private var _lights:Vector.<Light3D> = new Vector.<Light3D>();				
 		private var _sprites:Vector.<Sprite3D> = new Vector.<Sprite3D>();		
-		private var _objects:Vector.<Object3D> = new Vector.<Object3D>();		
-		private var _mapMeshes:Vector.<Mesh> = new Vector.<Mesh>();
+		private var _objects:Vector.<Object3D> = new Vector.<Object3D>();
+		private var _mapMeshes:Vector.<Mesh> = new Vector.<Mesh>();		
+		private var _mapObjects:Vector.<Object3D> = new Vector.<Object3D>();		
 		
 		/*---------------------------
 		Animations
@@ -34,11 +37,22 @@ package net.akimirksnis.delta.game.library
 		
 		/*---------------------------
 		Misc
-		---------------------------*/
+		---------------------------*/	
 		
 		// Object properties parsed from 3DSMax (keys - objects from all object vectors)
 		private var _properties:Dictionary = new Dictionary();
+		
+		// Properties of map objects
+		private var _mapProperties:Dictionary = new Dictionary();
+		
+		// Objects containing various info about each map
 		private var _mapData:Array = [];
+		
+		/*---------------------------
+		Map
+		---------------------------*/
+		
+		private var _map:GameMap;
 		
 		/**
 		 * Class constructor.
@@ -51,7 +65,7 @@ package net.akimirksnis.delta.game.library
 		
 		/*---------------------------
 		Public methods
-		---------------------------*/		
+		---------------------------*/			
 
 		/**
 		 * Adds an object to the library.
@@ -86,6 +100,23 @@ package net.akimirksnis.delta.game.library
 		public function getObjectByName(name:String):Object3D
 		{
 			for each(var o:Object3D in _objects)
+			{
+				if(o.name == name)
+					return o;				
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Gets map object3D by name.
+		 * 
+		 * @param name Object name.
+		 * @return Object3D of specified name.
+		 */
+		public function getMapObjectByName(name:String):Object3D
+		{
+			for each(var o:Object3D in _mapObjects)
 			{
 				if(o.name == name)
 					return o;				
@@ -160,6 +191,16 @@ package net.akimirksnis.delta.game.library
 			return _objects;
 		}
 		
+		public function get mapMeshes():Vector.<Mesh>
+		{
+			return _mapMeshes;
+		}
+		
+		public function get mapObjects():Vector.<Object3D>
+		{
+			return _mapObjects;
+		}
+		
 		public function get animations():Dictionary
 		{
 			return _animations;
@@ -167,17 +208,37 @@ package net.akimirksnis.delta.game.library
 		
 		public function get properties():Dictionary
 		{
+			
 			return _properties;
 		}
 		
-		public function get mapMeshes():Vector.<Mesh>
+		/**
+		 * Map object property dictionary.
+		 */
+		public function get mapProperties():Dictionary
 		{
-			return _mapMeshes;
-		}		
+			return _mapProperties;
+		}
+		public function set mapProperties(value:Dictionary):void
+		{
+			_mapProperties = value;
+		}
 		
 		public function get mapData():Array
 		{
 			return _mapData;
+		}
+		
+		/**
+		 * Current map.
+		 */
+		public function get map():GameMap
+		{
+			return _map;
+		}		
+		public function set map(value:GameMap):void
+		{
+			_map = value;
 		}
 	}
 }

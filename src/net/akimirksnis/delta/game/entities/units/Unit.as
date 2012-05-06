@@ -9,16 +9,17 @@ package net.akimirksnis.delta.game.entities.units
 	import alternativa.engine3d.primitives.Box;
 	import alternativa.engine3d.primitives.GeoSphere;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.utils.Utils;
+	import flash.events.Event;
+	import flash.geom.Vector3D;
+	import flash.utils.getTimer;
+	
 	import net.akimirksnis.delta.game.entities.AnimationType;
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
-	
-	import flash.events.Event;
-	import flash.geom.Vector3D;
-	import flash.utils.getTimer;
+	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.utils.Globals;
+	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class Unit extends Entity
 	{	
@@ -81,8 +82,11 @@ package net.akimirksnis.delta.game.entities.units
 		
 		protected var _currentWeapon:Weapon;
 		protected var _currentWeaponIndex:int = 0;
-		protected var _weapons:Vector.<Weapon> = new Vector.<Weapon>();
+		protected var _weapons:Vector.<Weapon> = new Vector.<Weapon>();	
 		
+		/**
+		 * Class constructor.
+		 */
 		public function Unit()
 		{
 			super();
@@ -97,8 +101,8 @@ package net.akimirksnis.delta.game.entities.units
 			super.setupAnimations();
 			
 			// Get all animations for this type of entity model
-			var animation:AnimationClip = Globals.library.getAnimationByName(super.type).clone();
-			var animationFrames:String = Globals.library.getPropertiesByName(super.type)["animations"];
+			var animation:AnimationClip = Library.instance.getAnimationByName(super.type).clone();
+			var animationFrames:String = Library.instance.getPropertiesByName(super.type)["animations"];
 			var timeBounds:Vector.<Number> = new Vector.<Number>();
 			
 			animation.attach(model, true);
@@ -134,7 +138,7 @@ package net.akimirksnis.delta.game.entities.units
 				aniSwitcher.activate(aniIdle, 0.1);
 				
 				// Register loop callback
-				Globals.gameCore.addLoopCallbackPre(aniController.update);
+				Globals.gameCore.addLoopCallback(aniController.update);
 			} else {
 				throw new Error("[Unit] Animation properties of the unit not found.");
 			}
@@ -259,7 +263,7 @@ package net.akimirksnis.delta.game.entities.units
 			// Current speed (in x/y dimension)
 			var length:Number = Math.sqrt(Math.pow(velocity.x, 2) + Math.pow(velocity.y, 2));
 			
-			trace("current speed: " + length);
+			//trace("current speed: " + length);
 			
 			if(length >= _speed)
 			{
@@ -336,9 +340,9 @@ package net.akimirksnis.delta.game.entities.units
 				down,
 				collisionPoint,
 				collisionPlane,
-				Globals.gameCore.collisionMesh
+				library.map.collisionMesh
 			);
-			trace("on ground :"+onGround);
+			//trace("on ground :"+onGround);
 			
 			if(onGround && !jumpTick)
 			{
@@ -365,17 +369,17 @@ package net.akimirksnis.delta.game.entities.units
 				velocity.z * elapsed
 			);
 			
-			trace("final velocity: "+velocity);
+			//trace("final velocity: "+velocity);
 			
 			// Calculate final destination point (taking in the account collisions and gravity)
-			var destination:Vector3D = collider.calculateDestination(source, displacement, Globals.gameCore.collisionMesh);
+			var destination:Vector3D = collider.calculateDestination(source, displacement, library.map.collisionMesh);
 			
 			// Set new coordinates of this unit
 			model.x = destination.x;
 			model.y = destination.y;
 			model.z = destination.z - this.model.boundBox.maxZ / 2;			
 			
-			trace("unit pos: " + model.z);
+			//trace("unit pos: " + model.z);
 			
 			// Last time is now
 			lastTime = timeNow;		
