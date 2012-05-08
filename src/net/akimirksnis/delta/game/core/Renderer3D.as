@@ -15,7 +15,7 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.utils.Globals;
 
 	/**
-	* Renderer3D class. Manages rendering 3D content
+	* Renderer3D class. Acts as an interface between stage3D and game logic.
 	*/
 	public class Renderer3D extends EventDispatcher
 	{
@@ -203,7 +203,7 @@ package net.akimirksnis.delta.game.core
 				_markLights = true;
 				
 				// Add markers for different light types
-				for each(l in library.lights)
+				for each(l in GameMap.currentMap.lights)
 				{
 					if(l is DirectionalLight)
 					{
@@ -250,7 +250,7 @@ package net.akimirksnis.delta.game.core
 				_markLights = false;
 				
 				// Remove markers for different light types
-				for each(l in library.lights)
+				for each(l in GameMap.currentMap.lights)
 				{
 					if(l is DirectionalLight)
 					{
@@ -278,6 +278,10 @@ package net.akimirksnis.delta.game.core
 				}
 			}
 		}
+		
+		/*---------------------------
+		Helpers
+		---------------------------*/
 		
 		private function onLightClick(e:Event):void
 		{

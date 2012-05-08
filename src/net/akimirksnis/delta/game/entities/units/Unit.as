@@ -13,6 +13,7 @@ package net.akimirksnis.delta.game.entities.units
 	import flash.geom.Vector3D;
 	import flash.utils.getTimer;
 	
+	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.entities.AnimationType;
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.entities.EntityType;
@@ -340,7 +341,7 @@ package net.akimirksnis.delta.game.entities.units
 				down,
 				collisionPoint,
 				collisionPlane,
-				library.map.collisionMesh
+				GameMap.currentMap.collisionMesh
 			);
 			//trace("on ground :"+onGround);
 			
@@ -372,7 +373,7 @@ package net.akimirksnis.delta.game.entities.units
 			//trace("final velocity: "+velocity);
 			
 			// Calculate final destination point (taking in the account collisions and gravity)
-			var destination:Vector3D = collider.calculateDestination(source, displacement, library.map.collisionMesh);
+			var destination:Vector3D = collider.calculateDestination(source, displacement, GameMap.currentMap.collisionMesh);
 			
 			// Set new coordinates of this unit
 			model.x = destination.x;

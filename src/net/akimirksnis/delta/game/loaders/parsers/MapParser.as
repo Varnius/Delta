@@ -11,12 +11,9 @@ package net.akimirksnis.delta.game.loaders.parsers
 	import flash.utils.Dictionary;
 	
 	import net.akimirksnis.delta.game.core.GameMap;
-	import net.akimirksnis.delta.game.library.Library;
 	
 	public class MapParser extends ModelParser
-	{
-		private var library:Library = Library.instance;
-		
+	{		
 		public function MapParser()
 		{
 			super();
@@ -34,19 +31,19 @@ package net.akimirksnis.delta.game.loaders.parsers
 		 * @param propertyDictionary Dictionary for storing properties of parsed objects.
 		 */
 		public function parseColladaMap(
+			map:GameMap,
 			mapXML:XML,
 			materialsPath:String
-		):Vector.<Object3D>
+		):void
 		{
 			var currentMesh:Mesh;
 			var parser:DeltaParserCollada = new DeltaParserCollada();
 			var meshVectorTemp:Vector.<Mesh> = new Vector.<Mesh>();
-			var result:Vector.<Object3D>;
 			
 			// Parse file and trim filepaths to textures
 			parser.parse(mapXML, materialsPath, true);	
-			// Return list of root objects
-			result = parser.hierarchy.concat();
+			// Set list of root objectsfor the map
+			map.rootLevelObjects = parser.hierarchy.concat();
 			
 			// Trace some info
 			trace("[ModelParser] > Objects in map file: " + parser.objects);
@@ -58,50 +55,53 @@ package net.akimirksnis.delta.game.loaders.parsers
 			{				
 				if((o is Object3D))  
 				{
-					library.mapObjects.push(o);
+					map.mapObjects.push(o);
 				}
 				
 				// Ambient lights				
 				if(o is AmbientLight)  
 				{
-					library.lights.push(o);				
+					map.lights.push(o);				
 				}
 				
 				// Directional lights
 				if(o is DirectionalLight)  
 				{
-					library.lights.push(o);
+					map.lights.push(o);	
 				}
 				
 				// Omnilights
 				if(o is OmniLight)  
 				{
-					library.lights.push(o);  
+					map.lights.push(o);	
 				}							 
 				
 				// Spotlights
 				if(o is SpotLight)  
 				{					
-					library.lights.push(o);
+					map.lights.push(o);	
 				}
 				
 				// Meshes				
 				if(o is Mesh)  
 				{
 					meshVectorTemp.push(o);
-					library.meshes.push(o);
-					library.mapMeshes.push(o);
+					map.mapMeshes.push(o);
 				}
 			}
 			
 			// Store map object props in the library
-			library.mapProperties = parser.properties;
+			map.mapProperties = parser.properties;
+			
+			var lightPerVertex:Boolean;
+			var properties:Object;
+			var geometryOnly:Boolean;
 			
 			// Parse meshes - upload geometry and initiate mesh texture loading  
 			for each(var mesh:Mesh in meshVectorTemp)
 			{
-				var properties:Object = parser.getPropertiesByObject(mesh);				
-				var lightPerVertex:Boolean;
+				properties = parser.getPropertiesByObject(mesh);				
+				geometryOnly = false;
 				
 				// Light mesh per vertex?
 				lightPerVertex = properties != null && properties["lightingPrecision"] == "vertex";
@@ -109,17 +109,17 @@ package net.akimirksnis.delta.game.loaders.parsers
 				// Skip collision mesh (???)
 				if(mesh.name == GameMap.COLLISION_MESH_NAME)
 				{
+					//geometryOnly = true;
+					//mesh.visible = false;
 					continue;
 				}
 				
 				// Parse mesh
-				parseMesh(mesh, lightPerVertex);
+				parseMesh(mesh, lightPerVertex, geometryOnly);
 			}
 			
 			// Clean parser outer references
 			parser.clean();
-			
-			return result;
 		}
 		
 		/**

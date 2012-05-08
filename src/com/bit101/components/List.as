@@ -427,6 +427,12 @@ package com.bit101.components
 		{
 			_items = value;
 			makeListItems();
+			
+			if(value.length > 0)
+			{
+				selectedIndex = 0;
+			}
+				
 			invalidate();
 		}
 		public function get items():Array

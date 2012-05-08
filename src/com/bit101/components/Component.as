@@ -51,8 +51,8 @@ package com.bit101.components
 		// So if you are using the Flex 3.x sdk compiler, switch the embed statment below to expose the correct version.
 		
 		// Flex 4.x sdk:
-		[Embed(source="/assets/pf_ronda_seven.ttf", embedAsCFF="false", fontName="PF Ronda Seven", mimeType="application/x-font")]
-		protected var Ronda:Class;
+		[Embed(source="/assets/orbitron-light.otf", embedAsCFF="false", fontName="Orbitron Light", mimeType="application/x-font")]
+		protected var Orbitron:Class;
 		
 		protected var _width:Number = 0;
 		protected var _height:Number = 0;

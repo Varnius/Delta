@@ -106,8 +106,6 @@ package net.akimirksnis.delta.game.controllers
 					return c;
 			}
 			
-			//trace("nf", name);
-			
 			return null;
 		}
 		

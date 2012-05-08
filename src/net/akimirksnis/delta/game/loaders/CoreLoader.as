@@ -361,7 +361,7 @@ package net.akimirksnis.delta.game.loaders
 			var loader:MapLoader = MapLoader(e.currentTarget);
 			var rawMap:Object = loader.loadedMapData;
 			var mapParser:MapParser = new MapParser();
-			var map:GameMap;
+			var map:GameMap = new GameMap();
 			
 			loader.removeEventListener(Event.COMPLETE, onModelsLoaded);			
 			
@@ -382,15 +382,13 @@ package net.akimirksnis.delta.game.loaders
 						library.animations
 					);*/
 				} else {						
-					map = new GameMap(
-						mapParser.parseColladaMap(
-							XML(rawMap.mapData),
-							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MAPS + mapFilenameNoExtension + "/"
-						)
-					);
-					
+					mapParser.parseColladaMap(
+						map,
+						XML(rawMap.mapData),
+						Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MAPS + mapFilenameNoExtension + "/"
+					);					
 					map.name = mapFilenameNoExtension;
-					library.map = map;
+					map.init();
 				}
 				
 				trace("-------");
@@ -465,6 +463,9 @@ package net.akimirksnis.delta.game.loaders
 			result = true;
 		}
 		
+		/**
+		 * Updates preloader value.
+		 */
 		private function updatePreloaderStep():void
 		{
 			preloader.value = 100 / totalSteps * currentStep;

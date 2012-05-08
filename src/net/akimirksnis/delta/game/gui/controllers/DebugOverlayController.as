@@ -81,9 +81,12 @@ package net.akimirksnis.delta.game.gui.controllers
 			(minco.getCompById("cb_show_terrain_wireframe") as CheckBox).selected ? 
 				Globals.gameCore.executeCommand("show_terrain_wireframe 1") : 
 				Globals.gameCore.executeCommand("show_terrain_wireframe 0") ;
-			(minco.getCompById("cb_show_colmesh") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_colmesh 1") : 
-				Globals.gameCore.executeCommand("show_colmesh 0") ;
+			(minco.getCompById("cb_show_colmesh_wireframe") as CheckBox).selected ? 
+				Globals.gameCore.executeCommand("show_colmesh_wireframe 1") : 
+				Globals.gameCore.executeCommand("show_colmesh_wireframe 0") ;
+			(minco.getCompById("cb_show_generic_wireframe") as CheckBox).selected ? 
+				Globals.gameCore.executeCommand("show_generic_wireframe 1") : 
+				Globals.gameCore.executeCommand("show_generic_wireframe 0") ;
 		}
 		
 		/**
@@ -138,16 +141,6 @@ package net.akimirksnis.delta.game.gui.controllers
 			Globals.gameCore.executeCommand("use_camera_mode 1");
 		}
 		
-		/**
-		 * Submits all debug menus.
-		 */
-		public function submitDebugMenus():void
-		{
-			onGeometryDebugMenuSubmit();
-			onUnitDebugMenuSubmit();
-			onLightsDebugMenuSubmit();
-		}
-		
 		/*---------------------------
 		Helpers
 		---------------------------*/
@@ -155,5 +148,10 @@ package net.akimirksnis.delta.game.gui.controllers
 		/*---------------------------
 		Getters/setters
 		---------------------------*/
+		
+		public function set hierarchyText(value:String):void
+		{
+			TextArea(minco.getCompById("textarea-hierarchy")).textField.htmlText = value;
+		}
 	}
 }

@@ -350,10 +350,10 @@ package net.akimirksnis.delta.game.loaders.parsers
 						trace("[ModelParser] > No materials found for: " + mesh.name);
 					}  
 				}
-			}
 				
-			// Load materials to VGA
-			addToLoadingQueue(textures);
+				// Load materials to VGA
+				addToLoadingQueue(textures);
+			}			
 		}
 		
 		/**

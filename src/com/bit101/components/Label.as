@@ -71,6 +71,7 @@ package com.bit101.components
 		{
 			_height = 18;
 			_tf = new TextField();
+			_tf.antiAliasType = Style.fontAntiAliasType;
 			_tf.height = _height;
 			_tf.embedFonts = Style.embedFonts;
 			_tf.selectable = false;

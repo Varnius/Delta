@@ -335,6 +335,7 @@ package com.bit101.components
 				if(!contains(_panel)) super.addChild(_panel);
 				_minimizeButton.rotation = 0;
 			}
+			invalidate();
 			dispatchEvent(new Event(Event.RESIZE));
 		}
 		public function get minimized():Boolean

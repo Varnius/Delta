@@ -5,11 +5,12 @@ package net.akimirksnis.delta.game.entities.weapons
 	import alternativa.engine3d.objects.WireFrame;
 	import alternativa.engine3d.primitives.GeoSphere;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
+	import flash.geom.Vector3D;
+	
+	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.entities.units.Unit;
-	
-	import flash.geom.Vector3D;
+	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class InstantDamageWeapon extends Weapon
 	{
@@ -61,7 +62,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			);
 			
 			// Find where ray from camera (along crosshair) intersects collision mesh
-			collisionMeshIntersectionData = library.map.collisionMesh.intersectRay(origin, direction);
+			collisionMeshIntersectionData = GameMap.currentMap.collisionMesh.intersectRay(origin, direction);
 			if(collisionMeshIntersectionData != null)
 			{
 				// Global coords of camera-collision mesh intersection
@@ -120,7 +121,7 @@ package net.akimirksnis.delta.game.entities.weapons
 				}			
 				
 				// Intersect calculated ray with collision mesh
-				collisionMeshIntersectionData = library.map.collisionMesh.intersectRay(origin, direction);			
+				collisionMeshIntersectionData = GameMap.currentMap.collisionMesh.intersectRay(origin, direction);			
 				// Ignore hit units if terrain hitpoint is closer than closes hit unit			
 				if(collisionMeshIntersectionData != null)
 				{

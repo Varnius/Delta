@@ -8,6 +8,8 @@ package net.akimirksnis.delta.game.core
 	import alternativa.engine3d.objects.WireFrame;
 	import alternativa.engine3d.resources.BitmapTextureResource;
 	
+	import com.bit101.components.Style;
+	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.geom.Vector3D;
@@ -20,6 +22,7 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.entities.statics.Teapot;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.entities.units.Walker2;
+	import net.akimirksnis.delta.game.gui.controllers.DebugOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.LevelSelectionOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.library.Library;
@@ -78,7 +81,10 @@ package net.akimirksnis.delta.game.core
 			}
 			
 			// Set global reference
-			Globals.gameCore = this;		
+			Globals.gameCore = this;
+		
+			// Component style
+			Style.setStyle(Style.DARK);
 		}
 		
 		/**
@@ -177,12 +183,15 @@ package net.akimirksnis.delta.game.core
 		 * @param e Event object.
 		 */
 		private function onMapLoaded(e:Event):void
-		{	
-			trace('core: map loaded');
-			guiController.unfocusAll();	
+		{
+			var map:GameMap = GameMap.currentMap;
+			guiController.unfocusAll();
+			
+			// Set hierarchy in debug overlay
+			DebugOverlayController(guiController.getOverlayControllerByName("DebugOverlayController")).hierarchyText = map.hierarchyText;
 			
 			// Add map for rendering
-			renderer.addObject3D(library.map);
+			renderer.addObject3D(map);
 			
 			// Handle debug mode
 			if(Globals.debugMode)
@@ -214,10 +223,10 @@ package net.akimirksnis.delta.game.core
 			
 			// CHARACTER			
 			renderer.mainContainer.calculateBoundBox();
-			var obj:Object3D = library.getMapObjectByName("pointer-spawn1");
+			var obj:Object3D = map.getMapObjectByName("pointer-spawn1");
 			
 			_unit = new Walker2();
-			library.map.addChild(_unit.model);
+			map.addChild(_unit.model);
 			_unit.model.x = obj.x;
 			_unit.model.y = obj.y;
 			_unit.model.z = obj.z;

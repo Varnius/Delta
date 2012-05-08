@@ -2,15 +2,13 @@ package net.akimirksnis.delta.game.core
 {
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.lights.*;
-	import alternativa.engine3d.objects.WireFrame;
+	import alternativa.engine3d.objects.Mesh;
 	
 	import flash.events.Event;
 	
 	import net.akimirksnis.delta.game.entities.units.Unit;
-	import net.akimirksnis.delta.game.library.Library;
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.utils.Utils;
 	import net.akimirksnis.delta.game.namespaces.delta_internal;
+	import net.akimirksnis.delta.game.utils.Utils;
 	
 	use namespace delta_internal;
 
@@ -25,7 +23,6 @@ package net.akimirksnis.delta.game.core
 		
 		private var core:Core;
 		private var renderer:Renderer3D = Renderer3D.instance;
-		private var library:Library = Library.instance;
 		
 		/**
 		 * Class constructor.
@@ -109,22 +106,27 @@ package net.akimirksnis.delta.game.core
 						break;
 					}
 					case "show_terrain":
-					{
-						library.map.terrainMesh.visible = Boolean(value);
+					{						
+						for each(var m:Mesh in GameMap.currentMap.mapMeshes)
+						{
+							m.visible = Boolean(value)
+						}
+						
 						break;
 					}
 					case "show_terrain_wireframe":
 					{
-						// Show/hide wireframes
-						for each(var w:WireFrame in library.map.wireframes)
-						{
-							w.visible = Boolean(value);
-						}
+						GameMap.currentMap.terrainMeshWireframe.visible = Boolean(value);
 						break;
 					}
-					case "show_colmesh":
+					case "show_colmesh_wireframe":
 					{
-						library.map.collisionMesh.visible = Boolean(value);
+						GameMap.currentMap.collisionMeshWireframe.visible = Boolean(value);
+						break;
+					}						
+					case "show_generic_wireframe":
+					{
+						GameMap.currentMap.genericWireframes.visible = Boolean(value);
 						break;
 					}
 					case "show_light_sources":
@@ -134,7 +136,7 @@ package net.akimirksnis.delta.game.core
 					}
 					case "light_enable_omni":
 					{
-						for each(o in library.lights)
+						for each(o in GameMap.currentMap.lights)
 						{
 							if(o is OmniLight)
 							{
@@ -145,7 +147,7 @@ package net.akimirksnis.delta.game.core
 					}
 					case "light_enable_directional":
 					{
-						for each(o in library.lights)
+						for each(o in GameMap.currentMap.lights)
 						{
 							if(o is DirectionalLight)
 							{
@@ -156,7 +158,7 @@ package net.akimirksnis.delta.game.core
 					}
 					case "light_enable_spot":
 					{
-						for each(o in library.lights)
+						for each(o in GameMap.currentMap.lights)
 						{
 							if(o is SpotLight)
 							{
@@ -167,7 +169,7 @@ package net.akimirksnis.delta.game.core
 					}
 					case "light_enable_ambient":
 					{
-						for each(o in library.lights)
+						for each(o in GameMap.currentMap.lights)
 						{
 							if(o is AmbientLight)
 							{

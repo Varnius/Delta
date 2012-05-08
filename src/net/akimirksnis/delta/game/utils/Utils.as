@@ -1,21 +1,41 @@
 package net.akimirksnis.delta.game.utils
 {
 	import alternativa.engine3d.core.BoundBox;
+	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
+	import alternativa.engine3d.objects.Mesh;
+	import alternativa.engine3d.objects.Skin;
+	import alternativa.engine3d.objects.Sprite3D;
+	import alternativa.engine3d.objects.WireFrame;
 	import alternativa.engine3d.resources.BitmapTextureResource;
 	import alternativa.engine3d.resources.TextureResource;
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.geom.ColorTransform;
 	import flash.geom.Vector3D;
 	import flash.system.Capabilities;
+	
+	import net.akimirksnis.delta.game.core.GameMap;
 
 	/**
-	 * This class contains frenquently used functions.
+	 * This class contains some frequently used generic stuff.
 	 */
 	public class Utils
 	{
 		public static const HALF_PI:Number = Math.PI / 2;
+		
+		/*---------------------------
+		Method: getColoredHierarchyAsHTMLString
+		---------------------------*/
+		
+		public static const COLOR_DEFAULT:String = "#D1D1D1";
+		public static const COLOR_GAMEMAP:String = "#EFEFEF";
+		public static const COLOR_MESH:String = "#8AFF00";
+		public static const COLOR_SKIN:String = "#9000FF";
+		public static const COLOR_LIGHT3D:String = "#FFDE00";
+		public static const COLOR_SPRITE3D:String = "#009AC6";
+		public static const COLOR_WIREFRAME:String = "#FF84E6";
 		
 		/**
 		 * Converts value in radians to its degree equivalent
@@ -119,6 +139,41 @@ package net.akimirksnis.delta.game.utils
 		}
 		
 		/**
+		 * Check if one Object3D is a descendant of another Object3D.
+		 * 
+		 * @object Object3D Parent object.
+		 * @object2 Possible descendant.
+		 * @return True if second object is descendant of the first one or first one itself.
+		 */
+		public static function isDescendantOf(object:Object3D, object2:Object3D):Boolean
+		{
+			var result:Boolean = false;
+			var current:Object3D;
+			
+			if(object == object2)
+			{
+				return true;
+			}
+			
+			for(var i:int = 0; i < object.numChildren; i++)
+			{
+				current = object.getChildAt(i);
+				
+				if(current == object2)
+				{
+					return true;
+				} else {
+					if(isDescendantOf(current, object2))
+					{
+						return true;
+					}
+				}
+			}
+			
+			return result;
+		}
+		
+		/**
 		 * Returns concatenated bound box of a container and all its children.
 		 * 
 		 * @container Object3D Object3D with 0 or more children.
@@ -177,6 +232,72 @@ package net.akimirksnis.delta.game.utils
 			}
 			
 			return resultBoundBox;
+		}
+		
+		/**
+		 * Generates wireframe from passed mesh (including its children).
+		 * 
+		 * @param mesh Source mesh.
+		 * @param color Color of the wireframe.
+		 * @return Generated wireframe.
+		 */
+		public static function generateWireframeWithChildren(mesh:Mesh, color:uint):WireFrame
+		{
+			var wf:WireFrame;
+			var child:Object3D;
+			
+			wf = WireFrame.createEdges(mesh, color);
+			wf.name = "wireframe-" + mesh.name;
+			
+			for(var i:int = 0; i < mesh.numChildren; i++)
+			{
+				child = mesh.getChildAt(i);
+				
+				if(child is Mesh)
+				{
+					wf.addChild(generateWireframeWithChildren(child as Mesh, color));
+				}				
+			}
+			
+			return wf;
+		}		
+		
+		/**
+		 * Returns a hierarchy for given object.
+		 * 
+		 * @param object Source object. 
+		 */
+		public static function getColoredHierarchyAsHTMLString(object:Object3D, spacer:String = ""):String
+		{
+			var result:String = "";
+			var color:String = COLOR_DEFAULT;
+			
+			if(object is Skin)
+			{
+				color = COLOR_SKIN;
+			} else if(object is Mesh) {
+				color = COLOR_MESH;
+			} else if(object is Light3D) {
+				color = COLOR_LIGHT3D;
+			} else if(object is GameMap) {
+				color = COLOR_GAMEMAP;
+			} else if(object is Sprite3D) {
+				color = COLOR_SPRITE3D;
+			} else if(object is Mesh) {
+				color = COLOR_MESH;
+			} else if(object is WireFrame) {
+				color = COLOR_WIREFRAME;
+			}
+			
+			result += spacer + "<font color='" + color + "'>" + object + "</font>" + "\n";
+			trace(result);
+			
+			for(var i:int = 0; i < object.numChildren; i++)
+			{
+				result += getColoredHierarchyAsHTMLString(object.getChildAt(i), spacer + "     ");
+			}
+			
+			return result;
 		}
 	}
 }

@@ -29,6 +29,7 @@
  
 package com.bit101.components
 {
+	import flash.text.AntiAliasType;
 
 	public class Style
 	{
@@ -47,8 +48,9 @@ package com.bit101.components
 		public static var LIST_ROLLOVER:uint = 0XDDDDDD;
 		
 		public static var embedFonts:Boolean = true;
-		public static var fontName:String = "PF Ronda Seven";
-		public static var fontSize:Number = 8;
+		public static var fontName:String = "Orbitron Light";
+		public static var fontSize:Number = 10;
+		public static var fontAntiAliasType:String = AntiAliasType.ADVANCED;
 		
 		public static const DARK:String = "dark";
 		public static const LIGHT:String = "light";

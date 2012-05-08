@@ -1,33 +1,7 @@
 package net.akimirksnis.delta.game.controllers
 {
-	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.core.Camera3D;
-	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.core.RayIntersectionData;
-	import alternativa.engine3d.core.Resource;
-	import alternativa.engine3d.core.View;
-	import alternativa.engine3d.core.events.MouseEvent3D;
-	import alternativa.engine3d.materials.FillMaterial;
-	import alternativa.engine3d.objects.Mesh;
-	import alternativa.engine3d.objects.Skin;
 	import alternativa.engine3d.objects.WireFrame;
-	import alternativa.engine3d.primitives.Box;
-	import alternativa.engine3d.resources.Geometry;
-	
-	import com.bit101.components.Component;
-	import com.bit101.components.Label;
-	import com.bit101.components.List;
-	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.utils.Segment;
-	import net.akimirksnis.delta.game.utils.Utils;
-	import net.akimirksnis.delta.game.cameras.IsometricCamera;
-	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
-	import net.akimirksnis.delta.game.controllers.interfaces.IController;
-	import net.akimirksnis.delta.game.core.Core;
-	import net.akimirksnis.delta.game.entities.AnimationType;
-	import net.akimirksnis.delta.game.entities.units.Unit;
-	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;
 	
 	import flash.display.InteractiveObject;
 	import flash.display.Sprite;
@@ -35,19 +9,22 @@ package net.akimirksnis.delta.game.controllers
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
-	import flash.geom.Point;
 	import flash.geom.Vector3D;
-	import flash.ui.Mouse;
+	
+	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
+	import net.akimirksnis.delta.game.entities.units.Unit;
+	import net.akimirksnis.delta.game.utils.Globals;
+	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class FPSController implements ICameraController
 	{	
 		// Constants
-		public const MOUSE_SENSITIVITY:Number = 1.0;
-		public const MAX_PITCH:Number = Utils.degToRad(0);
-		public const MIN_PITCH:Number = Utils.degToRad(-180);		
-		public const MIN_FOV:Number = Utils.degToRad(70);
-		public const MAX_FOV:Number = Utils.degToRad(110);	
-		public const PI2:Number = Math.PI * 2;		
+		public static const MOUSE_SENSITIVITY:Number = 1.0;
+		public static const MAX_PITCH:Number = Utils.degToRad(0);
+		public static const MIN_PITCH:Number = Utils.degToRad(-180);		
+		public static const MIN_FOV:Number = Utils.degToRad(70);
+		public static const MAX_FOV:Number = Utils.degToRad(110);	
+		public static const PI2:Number = Math.PI * 2;		
 		
 		// Regular attributes
 		protected var _followUnit:Unit;
