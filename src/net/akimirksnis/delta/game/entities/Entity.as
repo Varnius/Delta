@@ -3,8 +3,6 @@ package net.akimirksnis.delta.game.entities
 	import alternativa.engine3d.animation.AnimationController;
 	import alternativa.engine3d.animation.AnimationSwitcher;
 	import alternativa.engine3d.core.BoundBox;
-	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.core.events.Event3D;
 	import alternativa.engine3d.core.events.MouseEvent3D;
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
@@ -12,9 +10,8 @@ package net.akimirksnis.delta.game.entities
 	import flash.events.EventDispatcher;
 	import flash.geom.Vector3D;
 	
-	import net.akimirksnis.delta.game.core.Core;
+	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;
-	import net.akimirksnis.delta.game.library.Library;
 	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class Entity extends EventDispatcher
@@ -22,7 +19,10 @@ package net.akimirksnis.delta.game.entities
 		//Properties of an entity
 		
 		// Model mesh/skin used within the entity
-		protected var _model:Mesh;		
+		protected var _model:Mesh;
+		// Geometry used for collisions
+		protected var _collisionMesh:Mesh;
+		private var _excludeFromCollisions:Boolean = false;
 		// Entity type
 		protected var _type:String = EntityType.ENTITY_UNDEFINED;
 		// Entity unique name with unique number at the end, like unit_walker1, unit_walker2 etc
@@ -45,15 +45,15 @@ package net.akimirksnis.delta.game.entities
 		/*---------------------------
 		Setup methods
 		(called from child classes)
-		---------------------------*/
-		
+		---------------------------*/	
+
 		protected function setupModel(model:Mesh):void
 		{
 			_model = model;
 			
-			if(Globals.debugMode)
+			if(Globals.DEBUG_MODE)
 			{
-				var boundBox:BoundBox = this.model.boundBox;
+				var boundBox:BoundBox = this.m.boundBox;
 				var points:Vector.<Vector3D> = new Vector.<Vector3D>();
 				points.push(
 					new Vector3D(boundBox.minX, boundBox.minY, boundBox.minZ),
@@ -79,7 +79,7 @@ package net.akimirksnis.delta.game.entities
 				_boundBoxWireframe = WireFrame.createLineStrip(points, 0xFFFFFF, 1, 1);
 				_boundBoxWireframe.visible = false;
 				Globals.renderer.uploadResources(_boundBoxWireframe.getResources());
-				this.model.addChild(_boundBoxWireframe);
+				this.m.addChild(_boundBoxWireframe);
 			}
 		}
 		
@@ -91,8 +91,8 @@ package net.akimirksnis.delta.game.entities
 		
 		protected function setupEventHandlers():void
 		{
-			model.addEventListener(MouseEvent3D.CLICK, onSingleClick, false, 0, true);
-			model.addEventListener(MouseEvent3D.CLICK, onDoubleClick, false, 0, true);
+			m.addEventListener(MouseEvent3D.CLICK, onSingleClick, false, 0, true);
+			m.addEventListener(MouseEvent3D.CLICK, onDoubleClick, false, 0, true);
 		}
 		
 		/*---------------------------
@@ -126,9 +126,19 @@ package net.akimirksnis.delta.game.entities
 		Getters/setters
 		---------------------------*/
 		
-		public function get model():Mesh
+		public function get m():Mesh
 		{
 			return _model;
+		}
+		
+		public function get collisionMesh():Mesh
+		{
+			return _collisionMesh;
+		}
+		
+		public function get excludeFromCollisions():Boolean
+		{
+			return _excludeFromCollisions;
 		}
 		
 		public function get type():String
@@ -143,7 +153,7 @@ package net.akimirksnis.delta.game.entities
 		
 		public function get position():Vector3D
 		{
-			return new Vector3D(model.x, model.y, model.z);
+			return new Vector3D(m.x, m.y, m.z);
 		}
 		
 		public function get showBoundBox():Boolean
@@ -163,8 +173,8 @@ package net.akimirksnis.delta.game.entities
 		public function dispose():void
 		{			
 			// Remove unneeded event lsiteners
-			model.removeEventListener(MouseEvent3D.CLICK, onSingleClick, false);
-			model.removeEventListener(MouseEvent3D.DOUBLE_CLICK, onDoubleClick, false);
+			m.removeEventListener(MouseEvent3D.CLICK, onSingleClick, false);
+			m.removeEventListener(MouseEvent3D.DOUBLE_CLICK, onDoubleClick, false);
 			
 			// Nullify model reference
 			_model = null;

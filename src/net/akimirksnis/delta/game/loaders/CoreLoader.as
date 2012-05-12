@@ -10,7 +10,7 @@ package net.akimirksnis.delta.game.loaders
 	
 	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
-	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent;
 	import net.akimirksnis.delta.game.loaders.loaders.MapLoader;
 	import net.akimirksnis.delta.game.loaders.loaders.ModelLoader;

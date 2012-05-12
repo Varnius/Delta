@@ -5,13 +5,20 @@ package net.akimirksnis.delta.game.core
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
 	
+	import flash.events.Event;
+	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
 	
+	import net.akimirksnis.delta.game.collisions.CollisionOctree;
+	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
+	[Event(name="hierarchyChanged", type="net.akimirksnis.delta.game.core.GameMap")]
 	public class GameMap extends Object3D
 	{
+		public static const HIERARCHY_CHANGED:String = "hierarchyChanged";
+		
 		public static const TERRAIN_MESH_NAME:String = "mesh-terrain-root";		
 		public static const COLLISION_MESH_NAME:String = "mesh-collision-root";
 		public static const GENERIC_MESH_COLOR:uint = 0x0000CC;
@@ -20,16 +27,17 @@ package net.akimirksnis.delta.game.core
 		
 		private static var _currentMap:GameMap;
 		
+		private var zeroVector:Vector3D = new Vector3D();
+		private var collisionOctree:CollisionOctree = CollisionOctree.instance;
+		
 		private var _mapMeshes:Vector.<Mesh> = new Vector.<Mesh>();		
 		private var _mapObjects:Vector.<Object3D> = new Vector.<Object3D>();
 		private var _rootLevelObjects:Vector.<Object3D>;
-		private var _lights:Vector.<Light3D> = new Vector.<Light3D>();	
-		
-		// Properties of map objects
-		private var _mapProperties:Dictionary = new Dictionary();
-		
+		private var _lights:Vector.<Light3D> = new Vector.<Light3D>();
+		private var _entities:Vector.<Entity> = new Vector.<Entity>();
 		private var _collisionMesh:Mesh;
 		private var _terrainMesh:Mesh;
+		private var _mapProperties:Dictionary = new Dictionary();	
 		
 		/*---------------------------
 		Debug
@@ -49,8 +57,8 @@ package net.akimirksnis.delta.game.core
 		
 		/*---------------------------
 		Public methods
-		---------------------------*/
-		
+		---------------------------*/	
+
 		/**
 		 * Prepares map for use.
 		 */
@@ -64,13 +72,27 @@ package net.akimirksnis.delta.game.core
 				addChild(o);
 			}
 			
-			_terrainMesh = Mesh(getMapObjectByName(TERRAIN_MESH_NAME));
-			_collisionMesh = Mesh(getMapObjectByName(COLLISION_MESH_NAME));
+			_terrainMesh = Mesh(getObjectByName(TERRAIN_MESH_NAME));
+			_collisionMesh = Mesh(getObjectByName(COLLISION_MESH_NAME));
 			
-			if(Globals.debugMode)
+			// Hide collision mesh
+			_collisionMesh.visible = false;
+			
+			// Use terrain mesh for collisions if collision mesh is unavailable
+			if(_collisionMesh == null)
+			{
+				_collisionMesh = _terrainMesh;
+			}
+			
+			if(Globals.DEBUG_MODE)
 			{
 				generateWireframes();
 			}
+			
+			// Generate collision octree
+			collisionOctree.generateOctree(this);
+			
+			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
 		
 		/**
@@ -79,7 +101,7 @@ package net.akimirksnis.delta.game.core
 		 * @param name Object name.
 		 * @return Object3D of specified name.
 		 */
-		public function getMapObjectByName(name:String):Object3D
+		public function getObjectByName(name:String):Object3D
 		{
 			for each(var o:Object3D in _mapObjects)
 			{
@@ -88,6 +110,84 @@ package net.akimirksnis.delta.game.core
 			}
 			
 			return null;
+		}
+		
+		/**
+		 * Adds an entity to the map.
+		 * 
+		 * @param entity Entity to add.
+		 * @param marker Optional marker name for setting position of an entity.
+		 */
+		public function addEntity(entity:Entity, markerName:String = ""):void
+		{
+			var marker:Object3D;
+			var globalCoords:Vector3D;
+			
+			entities.push(entity);
+			
+			if(markerName != "")
+			{
+				marker = this.getObjectByName(markerName);
+				
+				// todo: remove if
+				if(marker)
+				{
+					globalCoords = marker.localToGlobal(zeroVector);
+					entity.m.x = globalCoords.x;
+					entity.m.y = globalCoords.y;
+					entity.m.z = globalCoords.z;	
+				}
+			}
+			
+			addChild(entity.m);
+			
+			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
+		}
+		
+		/**
+		 * Removes entity from map.
+		 *
+		 * @param entity Entity to remove.
+		 */
+		public function removeEntity(entity:Entity):void
+		{
+			var index:int = -1;
+			
+			for each(var e:Entity in entities)
+			{
+				if(e == entity)
+				{
+					index = entities.indexOf(e);
+				}
+			}
+			
+			if(index != -1)
+			{
+				entities.splice(index, 1);
+			} else {
+				trace("[GameCore] Entity to remove not found.");
+			}
+			
+			entity.dispose();
+			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
+		}
+		
+		/**
+		 * Returns entity by name.
+		 * 
+		 * @param name Name of the entity.
+		 * @return Entity of given name or null if entity is not found.
+		 */
+		public function getEntityByName(name:String):Entity
+		{
+			var e:Entity;
+			
+			for each(var ent:Entity in entities)
+			{
+				if(ent.name == name) e = ent;
+			}
+			
+			return e;
 		}
 		
 		/*---------------------------
@@ -168,6 +268,14 @@ package net.akimirksnis.delta.game.core
 		public function get lights():Vector.<Light3D>
 		{
 			return _lights;
+		}
+		
+		/**
+		 * List of entities.
+		 */
+		public function get entities():Vector.<Entity>
+		{
+			return _entities;
 		}
 		
 		/**

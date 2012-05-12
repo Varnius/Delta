@@ -6,7 +6,7 @@ package net.akimirksnis.delta.game.entities.units
 	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.weapons.SMG;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
-	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
@@ -59,7 +59,7 @@ package net.akimirksnis.delta.game.entities.units
 			// Set basic parameters of this type of entity
 			_health = MAX_HEALTH;
 			_maxHealth = MAX_HEALTH;
-			super._speed = SPEED;
+			super._maxWalkSpeed = SPEED;
 			
 			// Set collider
 			setupCollider(_collider);
@@ -75,11 +75,11 @@ package net.akimirksnis.delta.game.entities.units
 			
 			for each(var w:Weapon in _weapons)
 			{
-				Utils.getDescendantByName(this.model, "Base_HumanRPalm").addChild(w.model);
-				w.model.visible = false;				
+				Utils.getDescendantByName(this.m, "Base_HumanRPalm").addChild(w.m);
+				w.m.visible = false;				
 			}
 			
-			_currentWeapon.model.visible = true;
+			_currentWeapon.m.visible = true;
 			
 			/*---------------------------
 			Other

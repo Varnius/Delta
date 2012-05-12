@@ -2,28 +2,30 @@ package net.akimirksnis.delta.game.entities.units
 {
 	import alternativa.engine3d.animation.AnimationClip;
 	import alternativa.engine3d.collisions.EllipsoidCollider;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.materials.FillMaterial;
-	import alternativa.engine3d.objects.Mesh;
-	import alternativa.engine3d.objects.WireFrame;
-	import alternativa.engine3d.primitives.Box;
 	import alternativa.engine3d.primitives.GeoSphere;
 	
-	import flash.events.Event;
 	import flash.geom.Vector3D;
 	import flash.utils.getTimer;
 	
 	import net.akimirksnis.delta.game.core.GameMap;
+	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.entities.AnimationType;
 	import net.akimirksnis.delta.game.entities.Entity;
-	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
-	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.intersections.Intersector;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class Unit extends Entity
 	{	
+		/*---------------------------
+		Constants
+		---------------------------*/
+		
+		// 55 degrees
+		private static const SURFACE_IGNORE_ANGLE_COS:Number = 0.573;
+		
 		/*---------------------------
 		Movement, time tracking
 		---------------------------*/
@@ -32,16 +34,27 @@ package net.akimirksnis.delta.game.entities.units
 		private var timeNow:int;
 		private var lastTime:int;
 		
-		private var up:Vector3D = new Vector3D(0, 0, 1);
-		private var down:Vector3D = new Vector3D(0, 0, -1);
+		// Current velocity of unit (in each direction)
+		private var velocity:Vector3D = new Vector3D();
+		
+		// Vectors defining orientation of the unit
+		private var up:Vector3D = new Vector3D();		
 		private var forward:Vector3D = new Vector3D();
-		private var right:Vector3D;		
+		private var right:Vector3D;
+		
+		// Used to store scaling result of calculated
+		// unit direction vectors by user input values
+		private var scaledForward:Vector3D = new Vector3D();
+		
+		// Stores unified input velocity
+		private var summedUpDirections:Vector3D = new Vector3D();
+		
+		private var unitSpaceVelocity:Vector3D = new Vector3D();
 		private var accelerationAmount:Number = 100;
-		private var accelerationAmountInAir:Number = 25;
+		private var accelerationAmountInAir:Number = 50;
 		private var dampingAmount:Number = 50;
 		private var dampingAmountInAir:Number = 8;
-		private var gravityAccelerationAmount:Number = 35;
-		private var velocity:Vector3D = new Vector3D();
+		private var gravityAccelerationAmount:Number = 35;		
 		private var damping:Vector3D = new Vector3D();
 		private var onGround:Boolean = false;
 		private var fallSpeed:Number = 0;
@@ -49,7 +62,12 @@ package net.akimirksnis.delta.game.entities.units
 		private var displacement:Vector3D = new Vector3D();
 		private var source:Vector3D = new Vector3D();
 		private var collisionPoint:Vector3D = new Vector3D();
-		private var collisionPlane:Vector3D = new Vector3D();	
+		private var collisionPlane:Vector3D = new Vector3D();
+		
+		// Used for handling velocity when sliding
+		private var lineMeshIntersectionResult:Vector3D = new Vector3D();	
+		private var finalDestinationNoCollision:Vector3D = new Vector3D();
+		private var slideDampingCoef:Number = 0.95;
 		
 		/*---------------------------
 		Collisions
@@ -70,7 +88,7 @@ package net.akimirksnis.delta.game.entities.units
 		Unit characteristics
 		---------------------------*/
 		
-		protected var _speed:int = 500;
+		protected var _maxWalkSpeed:int = 500;
 		protected var _jumpHeight:int = 500;
 		protected var _maxHealth:int;
 		protected var _health:int;
@@ -106,7 +124,7 @@ package net.akimirksnis.delta.game.entities.units
 			var animationFrames:String = Library.instance.getPropertiesByName(super.type)["animations"];
 			var timeBounds:Vector.<Number> = new Vector.<Number>();
 			
-			animation.attach(model, true);
+			animation.attach(m, true);
 			
 			if(animationFrames != null || animationFrames != "")
 			{
@@ -150,15 +168,15 @@ package net.akimirksnis.delta.game.entities.units
 			this.collider = collider;
 			
 			// Collision spehere visualisation
-			if(Globals.debugMode)
+			if(Globals.DEBUG_MODE)
 			{
 				var rutul:GeoSphere = new GeoSphere(1,10,false,new FillMaterial(0xAAFF00, 0.4));
 				Globals.renderer.uploadResources(rutul.getResources());
-				this.model.addChild(rutul);
+				this.m.addChild(rutul);
 				rutul.scaleX = collider.radiusX;
 				rutul.scaleY = collider.radiusY;
 				rutul.scaleZ = collider.radiusZ;
-				rutul.z = this.model.boundBox.maxZ / 2;
+				rutul.z = this.m.boundBox.maxZ / 2;
 			}
 		}
 		
@@ -183,17 +201,24 @@ package net.akimirksnis.delta.game.entities.units
 			// Allow jumping if unit is on ground and at least two frames passed since last jump
 			if(onGround)
 			{
-				addVelocityXYZ(0, 0, _jumpHeight);
-				trace("jumping...");
+				addVelocityInUnitSpace(0, 0, _jumpHeight);
+				jumpTick = true;
+			}
+		}		
+		
+		public function propulse():void
+		{
+			// Allow jumping if unit is on ground and at least two frames passed since last jump
+			if(onGround)
+			{
+				addVelocityInUnitSpace(1000, 0, _jumpHeight);
 				jumpTick = true;
 			}
 		}
 		
 		/**
-		 * Adds velocity to the unit. Each property of the vector corresponds 
-		 * to the direction of the movement. Property w is not used. It`s 
-		 * better to use addVelocityXYZ method since it doesn`t require to
-		 * create new Vector3D object.
+		 * Adds raw velocity to the unit. The input vector is
+		 * not converted to unit`s local coordinate system.
 		 * 
 		 * @param movement Vector defining directions for unit movement.
 		 */
@@ -204,17 +229,18 @@ package net.akimirksnis.delta.game.entities.units
 		
 		/**
 		 * Adds velocity to the unit. Each parameter corresponds 
-		 * to the direction of the movement.
+		 * to the direction of the movement in the local coordinate 
+		 * system of the unit.
 		 * 
-		 * @param x Velocity along x axis.
-		 * @param y Velocity along y axis.
-		 * @param z Velocity along z axis.
+		 * @param x Velocity to add forward/backward.
+		 * @param y Velocity to add left/right.
+		 * @param z Velocity to add up/down.
 		 */
-		public function addVelocityXYZ(x:Number, y:Number, z:Number):void
+		public function addVelocityInUnitSpace(x:Number, y:Number, z:Number):void
 		{
-			velocity.x += x;
-			velocity.y += y;
-			velocity.z += z;			
+			unitSpaceVelocity.x += x;
+			unitSpaceVelocity.y += y;
+			unitSpaceVelocity.z += z;
 		}
 		
 		/**
@@ -227,29 +253,32 @@ package net.akimirksnis.delta.game.entities.units
 		public function addVelocityFromInput(input:Vector3D):void
 		{
 			// Reset vectors
-			up.setTo(0, 0, 1);
-			
+			up.copyFrom(Utils.UP_VECTOR);
+
 			/*----------------------
 			Calculate direction
 			----------------------*/
 			
 			// Calculate forward vector from unit rotation
-			forward.x = Math.cos(model.rotationZ - Utils.HALF_PI);
-			forward.y = Math.sin(model.rotationZ - Utils.HALF_PI);
+			forward.x = Math.cos(m.rotationZ - Utils.HALF_PI);
+			forward.y = Math.sin(m.rotationZ - Utils.HALF_PI);
 			forward.z = 0;
 			
 			// Calculate right vector from cross product of forward and up vectors
 			right = up.crossProduct(forward);
 			
-			// Scale movement vectors depending to keyboard input
-			forward.scaleBy(input.y);
+			// Scale movement vectors depending on keyboard input
+			scaledForward.copyFrom(forward);	
+			scaledForward.scaleBy(input.y);			
 			right.scaleBy(-input.x);
-			up.scaleBy(input.z);		
+			up.scaleBy(input.z);
 			
 			// Sum up all regular movement vectors and normalize result
-			forward.incrementBy(right);
-			forward.incrementBy(up);
-			forward.normalize();
+			summedUpDirections.copyFrom(Utils.ZERO_VECTOR); 
+			summedUpDirections.incrementBy(scaledForward);
+			summedUpDirections.incrementBy(right);
+			summedUpDirections.incrementBy(up);
+			summedUpDirections.normalize();
 			
 			/*----------------------
 			Handle velocity
@@ -257,29 +286,35 @@ package net.akimirksnis.delta.game.entities.units
 			
 			// Scale by acceleration
 			if(onGround)
-				forward.scaleBy(accelerationAmount);
+				summedUpDirections.scaleBy(accelerationAmount);
 			else
-				forward.scaleBy(accelerationAmountInAir);
+				summedUpDirections.scaleBy(accelerationAmountInAir);
 			
 			// Current speed (in x/y dimension)
 			var length:Number = Math.sqrt(Math.pow(velocity.x, 2) + Math.pow(velocity.y, 2));
 			
-			//trace("current speed: " + length);
-			
-			if(length >= _speed)
+			if(length >= _maxWalkSpeed)
 			{
-				if(velocity.x * forward.x < 0)
+				if(velocity.x * summedUpDirections.x < 0)
 				{
-					velocity.x += forward.x;
+					velocity.x += summedUpDirections.x;
 				}
-				if(velocity.y * forward.y < 0)
+				if(velocity.y * summedUpDirections.y < 0)
 				{
-					velocity.y += forward.y;
+					velocity.y += summedUpDirections.y;
 				}				
 			} else {				
 				// todo: maybe limit to exact speed
-				velocity.incrementBy(forward);
-			}			
+				velocity.incrementBy(summedUpDirections);
+			}
+			
+			// Calculate and add unrestricted velocity
+			scaledForward.copyFrom(forward);			
+			scaledForward.scaleBy(unitSpaceVelocity.x);			
+			unitSpaceVelocity.setTo(scaledForward.x, scaledForward.y, unitSpaceVelocity.z);
+			velocity.incrementBy(unitSpaceVelocity);			
+			
+			unitSpaceVelocity.copyFrom(Utils.ZERO_VECTOR);
 			
 			/*----------------------
 			Handle damping
@@ -299,7 +334,7 @@ package net.akimirksnis.delta.game.entities.units
 			
 			velocity.decrementBy(damping);
 			
-			// Set speed to zero if it has been inverted
+			// Set speed to zero if it has been inverted by damping
 			velocity.x = (velocity.x * prevX < 0) ? 0 : velocity.x;
 			velocity.y = (velocity.y * prevY < 0) ? 0 : velocity.y;
 		}
@@ -333,17 +368,16 @@ package net.akimirksnis.delta.game.entities.units
 			elapsed = (timeNow - lastTime) / 1000;
 			
 			// Set current ellipsoid position
-			source.setTo(model.x, model.y, model.z + this.model.boundBox.maxZ / 2);
+			source.setTo(m.x, m.y, m.z + this.m.boundBox.maxZ / 2);
 			
 			// Check for surface under the character				
 			onGround = collider.getCollision(
-				source, 
-				down,
+				source,
+				Utils.DOWN_VECTOR,
 				collisionPoint,
 				collisionPlane,
 				GameMap.currentMap.collisionMesh
-			);
-			//trace("on ground :"+onGround);
+			);			
 			
 			if(onGround && !jumpTick)
 			{
@@ -359,33 +393,80 @@ package net.akimirksnis.delta.game.entities.units
 			}
 			
 			/*----------------------
-			Calculate displacement and calculate final unit position
+			Calculate displacement and
+			final unit position
 			----------------------*/
 			
 			// Distance to move along all axes
-			// Forumula: s = v * t			
+			// Formula: s = v * t	
 			displacement.setTo(
 				velocity.x * elapsed,
 				velocity.y * elapsed,
 				velocity.z * elapsed
 			);
 			
-			//trace("final velocity: "+velocity);
-			
 			// Calculate final destination point (taking in the account collisions and gravity)
 			var destination:Vector3D = collider.calculateDestination(source, displacement, GameMap.currentMap.collisionMesh);
 			
 			// Set new coordinates of this unit
-			model.x = destination.x;
-			model.y = destination.y;
-			model.z = destination.z - this.model.boundBox.maxZ / 2;			
+			m.x = destination.x;
+			m.y = destination.y;
+			m.z = destination.z - this.m.boundBox.maxZ / 2;
 			
-			//trace("unit pos: " + model.z);
+			/*----------------------
+			Adjust velocity vector to allow sliding the
+			walls and other stuff that unit can bump into
+			----------------------*/
 			
+			// Collide
+			// todo: get collision data from calculateDestination for performance?
+			var collisionOccured:Boolean = collider.getCollision(
+				source,
+				displacement,
+				collisionPoint,
+				collisionPlane,
+				GameMap.currentMap.collisionMesh
+			);
+			
+			if(collisionOccured)
+			{
+				// Calculate cosine of a collision surface and
+				// ignore it if the angle is ~[0, 55] degrees
+				var surfaceAngleCos:Number = collisionPlane.dotProduct(Utils.UP_VECTOR);
+				
+				if(surfaceAngleCos < SURFACE_IGNORE_ANGLE_COS)
+				{				
+					lineMeshIntersectionResult.copyFrom(Utils.ZERO_VECTOR);
+					
+					// Get final destination
+					finalDestinationNoCollision.copyFrom(source);
+					finalDestinationNoCollision.incrementBy(displacement);
+					
+					// Intersect collision plane
+					Intersector.intersectPlane(
+						collisionPlane,
+						collisionPoint,
+						finalDestinationNoCollision,
+						lineMeshIntersectionResult);
+					
+					lineMeshIntersectionResult.decrementBy(collisionPoint);			
+					var velocityLengthXY:Number = Math.sqrt(Math.pow(velocity.x, 2) + Math.pow(velocity.y, 2));
+					
+					// Ignore z axis
+					lineMeshIntersectionResult.z = 0;
+					lineMeshIntersectionResult.normalize();				
+					lineMeshIntersectionResult.scaleBy(velocityLengthXY);
+					lineMeshIntersectionResult.scaleBy(slideDampingCoef);
+					
+					velocity.x = lineMeshIntersectionResult.x;
+					velocity.y = lineMeshIntersectionResult.y;
+				}
+			}
+
 			// Last time is now
-			lastTime = timeNow;		
+			lastTime = timeNow;
 		}
-		
+
 		/*---------------------------
 		Per-frame input handlers
 		---------------------------*/
@@ -454,9 +535,9 @@ package net.akimirksnis.delta.game.entities.units
 			return _damage;
 		}
 		
-		public function get speed():int 
+		public function get maxWalkSpeed():int 
 		{
-			return _speed;
+			return _maxWalkSpeed;
 		}
 		
 		public function get attackSpeed():int 

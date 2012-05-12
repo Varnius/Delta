@@ -7,7 +7,7 @@ package net.akimirksnis.delta.game.entities.statics
 	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.weapons.SMG;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
-	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	

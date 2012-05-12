@@ -1,4 +1,4 @@
-package net.akimirksnis.delta.game.library
+package net.akimirksnis.delta.game.core
 {
 	import alternativa.engine3d.animation.AnimationClip;
 	import alternativa.engine3d.core.Object3D;

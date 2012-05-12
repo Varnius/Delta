@@ -87,7 +87,7 @@ package net.akimirksnis.delta.game.entities.weapons
 				
 				// Calculate direction of ray from weapon fire output point
 				// to the intersection point determined earlier
-				origin = this.model.localToGlobal(_fireOriginPoint);
+				origin = this.m.localToGlobal(_fireOriginPoint);
 				direction = intersectionPoint.subtract(origin);
 				direction.normalize();
 				
@@ -96,7 +96,7 @@ package net.akimirksnis.delta.game.entities.weapons
 				{
 					if(u != _unit)
 					{
-						if(u.model.boundBox.intersectRay(u.model.globalToLocal(origin), direction))
+						if(u.m.boundBox.intersectRay(u.m.globalToLocal(origin), direction))
 						{
 							trace("Entity hit: " + u);
 							hitUnits.push(u);
@@ -158,7 +158,7 @@ package net.akimirksnis.delta.game.entities.weapons
 								// Debug line
 								if(line != null) Globals.renderer.removeObject3D(line, true);
 								linePoints = new Vector.<Vector3D>();
-								linePoints.push(this.model.localToGlobal(_fireOriginPoint), collisionMeshIntersectionData.object.localToGlobal(collisionMeshIntersectionData.point));
+								linePoints.push(this.m.localToGlobal(_fireOriginPoint), collisionMeshIntersectionData.object.localToGlobal(collisionMeshIntersectionData.point));
 								line = WireFrame.createLinesList(linePoints, 0x00FF00, 1, 1);
 								Globals.renderer.addObject3D(line, true);				
 							}

@@ -10,6 +10,7 @@ package net.akimirksnis.delta.game.gui.controllers
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	
+	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.gui.views.DebugOverlay;
 	import net.akimirksnis.delta.game.utils.Globals;
 
@@ -40,6 +41,11 @@ package net.akimirksnis.delta.game.gui.controllers
 		{
 			consoleTextArea.text += Globals.gameCore.lastCommand + "\n";
 			consoleTextArea.text += Globals.gameCore.lastResponse.length > 0 ? Globals.gameCore.lastResponse.length + "\n" : "";
+		}
+		
+		private function onMapHierarchyChanged(e:Event = null):void
+		{
+			TextArea(minco.getCompById("textarea-hierarchy")).textField.htmlText = GameMap.currentMap.hierarchyText;
 		}
 		
 		/*---------------------------
@@ -143,15 +149,17 @@ package net.akimirksnis.delta.game.gui.controllers
 		
 		/*---------------------------
 		Helpers
-		---------------------------*/
+		---------------------------*/	
 		
 		/*---------------------------
 		Getters/setters
 		---------------------------*/
 		
-		public function set hierarchyText(value:String):void
+		public function set map(value:GameMap):void
 		{
-			TextArea(minco.getCompById("textarea-hierarchy")).textField.htmlText = value;
+			// Important - use weak reference to avoid memory leaks (todo: check if really works)
+			value.addEventListener(GameMap.HIERARCHY_CHANGED, onMapHierarchyChanged, false, 0, true);
+			onMapHierarchyChanged();
 		}
 	}
 }

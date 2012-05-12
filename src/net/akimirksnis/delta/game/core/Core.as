@@ -3,7 +3,6 @@ package net.akimirksnis.delta.game.core
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.lights.*;
 	import alternativa.engine3d.materials.TextureMaterial;
-	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.SkyBox;
 	import alternativa.engine3d.objects.WireFrame;
 	import alternativa.engine3d.resources.BitmapTextureResource;
@@ -19,13 +18,11 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.controllers.*;
 	import net.akimirksnis.delta.game.controllers.interfaces.*;
 	import net.akimirksnis.delta.game.entities.Entity;
-	import net.akimirksnis.delta.game.entities.statics.Teapot;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.entities.units.Walker2;
 	import net.akimirksnis.delta.game.gui.controllers.DebugOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.LevelSelectionOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
-	import net.akimirksnis.delta.game.library.Library;
 	import net.akimirksnis.delta.game.loaders.CoreLoader;
 	import net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent;
 	import net.akimirksnis.delta.game.namespaces.delta_internal;
@@ -36,7 +33,6 @@ package net.akimirksnis.delta.game.core
 	[Event(name="commandExecuted", type="flash.events.Event")]
 	public class Core extends EventDispatcher
 	{
-		// Singleton
 		private static var _instance:Core = new Core(SingletonLock);	
 		
 		// Unit in control		
@@ -45,30 +41,23 @@ package net.akimirksnis.delta.game.core
 		// Renderer
 		private var renderer3D:Renderer3D;
 		
-		// Collections		
-		private var entities:Vector.<Entity> = new Vector.<Entity>();
+		// Collections	
 		private var _units:Vector.<Unit> = new Vector.<Unit>();
 		private var loopCallbacks:Vector.<Function> = new Vector.<Function>();
-		private var _mapWireframes:Vector.<WireFrame> = new Vector.<WireFrame>();
-		private var specialWireframes:Vector.<WireFrame> = new Vector.<WireFrame>();
 		
 		// Controllers		
 		private var guiController:GuiController;
 		private var _cameraController:ICameraController;
 		private var _fpsController:ICameraController;
-		private var _freeRoamController:ICameraController;
-		
-		// Pathfinding		
-		private var _mapRunning:Boolean;
+		private var _freeRoamController:ICameraController;		
 
 		// Loader
 		delta_internal var loader:CoreLoader
-		
-		// Command executor
 		delta_internal var commandExecutor:CommandExecuter;
 		
 		// Library
 		private var library:Library = Library.instance;
+		private var _mapRunning:Boolean;
 		
 		/**
 		 * Class constructor.
@@ -188,13 +177,16 @@ package net.akimirksnis.delta.game.core
 			guiController.unfocusAll();
 			
 			// Set hierarchy in debug overlay
-			DebugOverlayController(guiController.getOverlayControllerByName("DebugOverlayController")).hierarchyText = map.hierarchyText;
+			if(Globals.DEBUG_MODE)
+			{
+				DebugOverlayController(guiController.getOverlayControllerByName("DebugOverlayController")).map = map;
+			}			
 			
 			// Add map for rendering
 			renderer.addObject3D(map);
 			
 			// Handle debug mode
-			if(Globals.debugMode)
+			if(Globals.DEBUG_MODE)
 			{				
 				// Debug lights
 				renderer.debugLights = true;
@@ -223,13 +215,9 @@ package net.akimirksnis.delta.game.core
 			
 			// CHARACTER			
 			renderer.mainContainer.calculateBoundBox();
-			var obj:Object3D = map.getMapObjectByName("pointer-spawn1");
 			
 			_unit = new Walker2();
-			map.addChild(_unit.model);
-			_unit.model.x = obj.x;
-			_unit.model.y = obj.y;
-			_unit.model.z = obj.z;
+			map.addEntity(_unit, "marker-spawn1");
 			_units.push(_unit);			
 			ctents.push(_unit);
 			
@@ -356,44 +344,6 @@ package net.akimirksnis.delta.game.core
 		public function executeCommand(command:String):void
 		{
 			commandExecutor.executeCommand(command);
-		}
-		
-		public function addEntity(e:Entity):void
-		{
-			entities.push(e);
-			renderer3D.addObject3D(e.model);
-		}
-		
-		public function removeEntity(entity:Entity):void
-		{
-			var index:int = -1;
-			
-			for each(var e:Entity in entities)
-			{
-				if(e == entity) index = entities.indexOf(e);
-			}
-			
-			if(index != -1)
-			{
-				entities.splice(index, 1);
-			} else {
-				trace("[GameCore] Entity to remove not found.");
-			}
-			
-			entity.dispose();
-			renderer3D.removeObject3D(entity.model);
-		}
-		
-		public function getEntityByName(name:String):Entity
-		{
-			var e:Entity;
-			
-			for each(var ent:Entity in entities)
-			{
-				if(ent.name == name) e = ent;
-			}
-			
-			return e;
 		}
 		
 		/**

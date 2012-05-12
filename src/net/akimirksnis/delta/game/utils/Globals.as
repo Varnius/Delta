@@ -10,13 +10,10 @@ package net.akimirksnis.delta.game.utils
 	import net.akimirksnis.delta.game.controllers.interfaces.IController;
 	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.core.Renderer3D;
-	import net.akimirksnis.delta.game.library.Library;
+	import net.akimirksnis.delta.game.core.Library;
 
 	public class Globals
 	{
-		// File extensions
-		public static const MAP_FILE_EXTENSION:String = ".DAE";
-		
 		// Global paths
 		public static const LOCAL_ROOT:String = "C:/Users/Varnius/Desktop/delta/data/"
 		public static const ASSETS_XML:String = "assets.xml";		
@@ -39,6 +36,6 @@ package net.akimirksnis.delta.game.utils
 		public static var GUIRoot:DisplayObjectContainer;
 		
 		// Global debug mode
-		public static var debugMode:Boolean = true;
+		public static const DEBUG_MODE:Boolean = true;
 	}
 }

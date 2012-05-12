@@ -20,7 +20,7 @@ package net.akimirksnis.delta.game.controllers
 	public class GuiController implements IController
 	{		
 		private static var _allowInstantiation:Boolean = false;
-		private static var _instance:GuiController;
+		private static var _instance:GuiController = new GuiController(SingletonLock);
 		
 		private var components:Vector.<Component> = new Vector.<Component>();	
 		private var _enabled:Boolean = true;
@@ -36,20 +36,23 @@ package net.akimirksnis.delta.game.controllers
 		/**
 		 * Initializes GUI components.
 		 */
-		public function GuiController():void
+		public function GuiController(lock:Class):void
 		{	
-			if(!_allowInstantiation)
-				throw new Error("The class 'GuiController' is singleton.");
+			//if(!_allowInstantiation)
+			//	throw new Error("The class 'GuiController' is singleton.");
 
 			Globals.stage.addChild(GUIRoot);
 			Globals.GUIRoot = GUIRoot;
 			
 			// Add overlay controllers
 			
-			// Debug overlay			
-			debugOverlayController = new DebugOverlayController("DebugOverlayController");				
-			addOverlayController(debugOverlayController);
-			debugOverlayController.enabled = Globals.debugMode;
+			// Debug overlay
+			if(Globals.DEBUG_MODE)
+			{
+				debugOverlayController = new DebugOverlayController("DebugOverlayController");				
+				addOverlayController(debugOverlayController);
+				debugOverlayController.enabled = Globals.DEBUG_MODE;
+			}			
 			
 			// Preloader overlay
 			addOverlayController(new PreloaderOverlayController("PreloaderOverlayController"));
@@ -185,38 +188,41 @@ package net.akimirksnis.delta.game.controllers
 		private function onKeyUp(e:KeyboardEvent):void
 		{
 			// F1 - show/hide debug overlay
-			if(e.keyCode == 112)
+			if(Globals.DEBUG_MODE)
 			{
-				if(debugOverlayController.enabled)
+				if(e.keyCode == 112)
 				{
-					var differs:Boolean = false;
-					
-					for each(var c:IController in _fellowControllers)
+					if(debugOverlayController.enabled)
 					{
-						if(c.enabled)
+						var differs:Boolean = false;
+						
+						for each(var c:IController in _fellowControllers)
 						{
-							differs = true;
-							break;
+							if(c.enabled)
+							{
+								differs = true;
+								break;
+							}
 						}
-					}
-					
-					if(!differs && previouslyEnabledController != null)
-					{
-						previouslyEnabledController.enabled = true;
-					}
-					
-					debugOverlayController.unfocus();
-				} else {
-					for each(c in _fellowControllers)
-					{
-						if(c.enabled)
+						
+						if(!differs && previouslyEnabledController != null)
 						{
-							previouslyEnabledController = c;
-							c.enabled = false;
+							previouslyEnabledController.enabled = true;
 						}
-					}
-					debugOverlayController.focus();
-				}			
+						
+						debugOverlayController.unfocus();
+					} else {
+						for each(c in _fellowControllers)
+						{
+							if(c.enabled)
+							{
+								previouslyEnabledController = c;
+								c.enabled = false;
+							}
+						}
+						debugOverlayController.focus();
+					}			
+				}
 			}
 		}
 		
@@ -262,14 +268,7 @@ package net.akimirksnis.delta.game.controllers
 		 * Returns singleton of this class.
 		 */
 		public static function get instance():GuiController
-		{
-			if(_instance == null)
-			{
-				_allowInstantiation = true;
-				_instance = new GuiController();
-				_allowInstantiation = false;
-			}
-			
+		{			
 			return _instance;
 		}
 		
@@ -307,3 +306,5 @@ package net.akimirksnis.delta.game.controllers
 		}
 	}
 }
+
+class SingletonLock {}

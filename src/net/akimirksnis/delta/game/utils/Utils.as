@@ -12,9 +12,7 @@ package net.akimirksnis.delta.game.utils
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.geom.ColorTransform;
 	import flash.geom.Vector3D;
-	import flash.system.Capabilities;
 	
 	import net.akimirksnis.delta.game.core.GameMap;
 
@@ -24,6 +22,9 @@ package net.akimirksnis.delta.game.utils
 	public class Utils
 	{
 		public static const HALF_PI:Number = Math.PI / 2;
+		public static const UP_VECTOR:Vector3D = new Vector3D(0, 0, 1);
+		public static const DOWN_VECTOR:Vector3D = new Vector3D(0, 0, -1);		
+		public static const ZERO_VECTOR:Vector3D = new Vector3D(0, 0, 0);
 		
 		/*---------------------------
 		Method: getColoredHierarchyAsHTMLString
@@ -98,7 +99,7 @@ package net.akimirksnis.delta.game.utils
 		}
 		
 		/**
-		 * Trims file extension in string. (format: ****.***)
+		 * Trims file extension in given string. (format: ****.***)
 		 * 
 		 * @string Input string.
 		 * @return Trimmed string.
@@ -186,6 +187,11 @@ package net.akimirksnis.delta.game.utils
 				minY:Number = Number.MAX_VALUE, maxY:Number = Number.MIN_VALUE, 
 				minZ:Number = Number.MAX_VALUE, maxZ:Number = Number.MIN_VALUE;
 			
+			if(container.numChildren == 0)
+			{
+				return container.boundBox;
+			}
+			
 			// Recursively search child tree of the container
 			for(var i:int = 0; i < container.numChildren; i++)
 			{
@@ -211,11 +217,13 @@ package net.akimirksnis.delta.game.utils
 				{
 					maxY = container.boundBox.maxY;
 				}
-				if(currentBoundBox.maxZ < maxZ)
+				if(currentBoundBox.maxZ > maxZ)
 				{
 					maxZ = container.boundBox.maxZ;
 				}
 			}
+			
+			resultBoundBox = new BoundBox();
 			
 			// Set found values
 			resultBoundBox.minX = minX;
@@ -224,12 +232,6 @@ package net.akimirksnis.delta.game.utils
 			resultBoundBox.maxX = maxX;
 			resultBoundBox.maxY = maxY;
 			resultBoundBox.maxZ = maxZ;
-			
-			// If there are no children - return container`s own bound box
-			if(resultBoundBox == null)
-			{
-				return container.boundBox;
-			}
 			
 			return resultBoundBox;
 		}
@@ -290,12 +292,51 @@ package net.akimirksnis.delta.game.utils
 			}
 			
 			result += spacer + "<font color='" + color + "'>" + object + "</font>" + "\n";
-			trace(result);
 			
 			for(var i:int = 0; i < object.numChildren; i++)
 			{
 				result += getColoredHierarchyAsHTMLString(object.getChildAt(i), spacer + "     ");
 			}
+			
+			return result;
+		}
+		
+		/**
+		 * Returns hierarchy of Object3Ds as a vector.
+		 * 
+		 * @param root Hierarchy root object.
+		 * @return Hierarchy vector representation.
+		 */
+		public static function getMeshHierachyAsVector(root:Object3D):Vector.<Mesh>
+		{
+			var result:Vector.<Mesh> = new Vector.<Mesh>();
+			
+			// Add root object if it is a mesh
+			if(root is Mesh)
+			{
+				result.push(root);
+			}
+			
+			// Loop through children and collect meshes
+			for(var i:int = 0; i < root.numChildren; i++)
+			{
+				result = result.concat(getMeshHierachyAsVector(root.getChildAt(i)));
+			}
+			
+			// Quickly drop duplicates
+			/*var set:Object = {};
+			
+			for(i = 0; i < result.length; i++)
+			{
+				set[result[i]] = true;
+			}
+			
+			result = new Vector.<Mesh>();
+			
+			for(var prop:* in set)
+			{
+				result.push[prop];
+			}*/
 			
 			return result;
 		}

@@ -11,7 +11,6 @@ package net.akimirksnis.delta.game.core
 	import flash.events.EventDispatcher;
 	
 	import net.akimirksnis.delta.game.debug.LightDebugSprite;
-	import net.akimirksnis.delta.game.library.Library;
 	import net.akimirksnis.delta.game.utils.Globals;
 
 	/**

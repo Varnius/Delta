@@ -50,7 +50,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			setupEventHandlers();
 			
 			// Model selectable?
-			model.mouseEnabled = false;
+			m.mouseEnabled = false;
 			
 			/*---------------------------
 			Calls to Weapon superclass

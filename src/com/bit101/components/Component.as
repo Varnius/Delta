@@ -133,6 +133,10 @@ package com.bit101.components
 			addEventListener(Event.ENTER_FRAME, onInvalidate);
 		}
 		
+		/**
+		 * Updates component size according to such user defined params as
+		 * top, right, bottom, left, horizontalAlign, verticalAlign.
+		 */
 		protected function updateSizingAndPosition():void
 		{
 			if(_componentParent == null)

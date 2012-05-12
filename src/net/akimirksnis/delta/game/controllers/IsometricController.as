@@ -209,13 +209,13 @@ package net.akimirksnis.delta.game.controllers
 			var y:Number, x:Number;
 			x = mx - middlePoint.x;
 			y = my - middlePoint.y;			
-			_unit.model.rotationZ = -Math.atan2(y, x) + Utils.degToRad(90);
+			_unit.m.rotationZ = -Math.atan2(y, x) + Utils.degToRad(90);
 			
 			gameCursor.x = mx;
 			gameCursor.y = my;
 			
 			// Handle cursor rotation
-			gameCursor.rotation = -Utils.radToDeg(_unit.model.rotationZ) + 180;			
+			gameCursor.rotation = -Utils.radToDeg(_unit.m.rotationZ) + 180;			
 			
 			// Inform unit about mouse key presses
 			if(mouseLeftDown)
@@ -271,9 +271,9 @@ package net.akimirksnis.delta.game.controllers
 		 */
 		private function handleCameraPosition():void
 		{		
-			_camera.x = unit.model.x - areaLength * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationY));
-			_camera.y = unit.model.y - areaWidth * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationX)); 
-			_camera.z = IsometricCamera.POSITION_Z + _unit.model.z;
+			_camera.x = unit.m.x - areaLength * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationY));
+			_camera.y = unit.m.y - areaWidth * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationX)); 
+			_camera.z = IsometricCamera.POSITION_Z + _unit.m.z;
 		}
 		
 		/*---------------------------

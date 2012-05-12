@@ -18,8 +18,7 @@ package net.akimirksnis.delta.game.controllers
 	
 	public class FPSController implements ICameraController
 	{	
-		// Constants
-		public static const MOUSE_SENSITIVITY:Number = 1.0;
+		// Constants		
 		public static const MAX_PITCH:Number = Utils.degToRad(0);
 		public static const MIN_PITCH:Number = Utils.degToRad(-180);		
 		public static const MIN_FOV:Number = Utils.degToRad(70);
@@ -34,12 +33,15 @@ package net.akimirksnis.delta.game.controllers
 		protected var gameCursor:Sprite = new Sprite();
 		
 		// Input related variables
+		public var mouseSensitivity:Number = 1.0;
+		private var allowJumping:Boolean = true;
+		private var allowPropulsing:Boolean = true;
 		protected var currentlyPressedKeys:Object = new Object();
 		protected var mouseLeftDown:Boolean;
 		protected var mouseRightDown:Boolean;
 		protected var mouseMovementX:Number;
 		protected var mouseMovementY:Number;
-		protected var velocityFromInput:Vector3D = new Vector3D();
+		protected var velocityFromInput:Vector3D = new Vector3D();		
 		
 		// Debug
 		protected var targetLine:WireFrame;
@@ -52,8 +54,7 @@ package net.akimirksnis.delta.game.controllers
 		public function FPSController(eventSource:InteractiveObject, camera:Camera3D, followUnit:Unit = null)
 		{
 			_eventSource = eventSource;
-			_camera = camera;
-			
+			_camera = camera;			
 			this.unit = followUnit;
 			
 			onStageResize();
@@ -132,13 +133,7 @@ package net.akimirksnis.delta.game.controllers
 			}
 			
 			// should be called once per tick
-			_followUnit.addVelocityFromInput(velocityFromInput);
-			
-			// Jump - space
-			if(currentlyPressedKeys[32])
-			{
-				_followUnit.jump();
-			}
+			_followUnit.addVelocityFromInput(velocityFromInput);			
 		}
 		
 		/**
@@ -160,14 +155,14 @@ package net.akimirksnis.delta.game.controllers
 				percMovementY = mouseMovementY / Globals.stage.stageHeight;
 				
 				// Handle yaw
-				_followUnit.model.rotationZ -= Math.PI * percMovementX * MOUSE_SENSITIVITY;				
-				_followUnit.model.rotationZ = _followUnit.model.rotationZ > PI2 ? _followUnit.model.rotationZ - PI2 : _followUnit.model.rotationZ;
-				_followUnit.model.rotationZ = _followUnit.model.rotationZ < -PI2 ? _followUnit.model.rotationZ + PI2 : _followUnit.model.rotationZ;
+				_followUnit.m.rotationZ -= Math.PI * percMovementX * mouseSensitivity;				
+				_followUnit.m.rotationZ = _followUnit.m.rotationZ > PI2 ? _followUnit.m.rotationZ - PI2 : _followUnit.m.rotationZ;
+				_followUnit.m.rotationZ = _followUnit.m.rotationZ < -PI2 ? _followUnit.m.rotationZ + PI2 : _followUnit.m.rotationZ;
 				
 				// Handle pitch
 				if(_camera.rotationX <= MAX_PITCH &&_camera.rotationX >= MIN_PITCH)
 				{
-					_camera.rotationX -= Math.PI * percMovementY * MOUSE_SENSITIVITY;
+					_camera.rotationX -= Math.PI * percMovementY * mouseSensitivity;
 					
 					if(_camera.rotationX > MAX_PITCH)
 					{
@@ -213,9 +208,9 @@ package net.akimirksnis.delta.game.controllers
 		}
 		
 		/**
-		 * Handle all input that does not require per-frame check.
+		 * Handle key down input that does not require per-frame check.
 		 */
-		private function handleStaticInput():void
+		private function handleNonPerFrameKeyDown():void
 		{
 			// Key: 'o'
 			// Enter fullscreen mode
@@ -231,6 +226,20 @@ package net.akimirksnis.delta.game.controllers
 					//disableMouseLock();
 				}
 			}
+			
+			// Jump - space (allow only once per tap)
+			if(currentlyPressedKeys[32] && allowJumping)
+			{
+				_followUnit.jump();
+				allowJumping = false;
+			}
+			
+			// Propulse - shift (allow only once per tap)
+			if(currentlyPressedKeys[16] && allowPropulsing)
+			{
+				_followUnit.propulse();
+				allowPropulsing = false;
+			}			
 		}
 		
 		private function invalidateInput():void
@@ -331,8 +340,9 @@ package net.akimirksnis.delta.game.controllers
 		private function onKeyDown(e:KeyboardEvent):void
 		{
 			currentlyPressedKeys[e.keyCode] = true;
+			
 			// Handle keyboard input that does not require per-frame update
-			handleStaticInput();
+			handleNonPerFrameKeyDown();
 		}
 		
 		/**
@@ -341,6 +351,20 @@ package net.akimirksnis.delta.game.controllers
 		private function onKeyUp(e:KeyboardEvent):void
 		{
 			currentlyPressedKeys[e.keyCode] = false;
+			
+			// Space
+			// Allow jumping again after space is released
+			if(e.keyCode == 32)
+			{
+				allowJumping = true;
+			}
+			
+			// Shift
+			// Allow propulsing again after space is released
+			if(e.keyCode == 16)
+			{
+				allowPropulsing = true;
+			}
 		}
 		
 		/*---------------------------
@@ -375,7 +399,7 @@ package net.akimirksnis.delta.game.controllers
 				attachListeners();
 				enableGameCursor();
 				enableMouseLock();
-				_followUnit.model.visible = false;
+				_followUnit.m.visible = false;
 				_enabled = true;				
 			}			
 		}
@@ -389,9 +413,9 @@ package net.akimirksnis.delta.game.controllers
 			if(value != null)
 			{
 				_followUnit = value;
-				_followUnit.model.addChild(_camera);
-				_camera.z += _followUnit.model.boundBox.maxZ * 0.95;
-				_followUnit.model.visible = false;
+				_followUnit.m.addChild(_camera);
+				_camera.z += _followUnit.m.boundBox.maxZ * 0.95;
+				_followUnit.m.visible = false;
 				
 				// todo
 				//_camera.z += _followUnit.model.boundBox.maxZ * 3;				
