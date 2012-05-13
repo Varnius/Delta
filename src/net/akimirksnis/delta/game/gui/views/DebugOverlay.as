@@ -17,13 +17,14 @@ package net.akimirksnis.delta.game.gui.views
 						</VBox>
 					</Window>
 			
-					<!-- Map geory debug menu -->
+					<!-- Geometry debug menu -->
 					<Window id="map_geometry_debug_menu" title="Debug map" width="200" height="190" left="5" bottom="5" draggable="true">
 						<VBox left="15" right="5" top="15" bottom="15" spacing="13">
 							<CheckBox label="Show terrain" id="cb_show_terrain" selected="true" />
 							<CheckBox label="Show terrain wireframe" id="cb_show_terrain_wireframe" selected="false"/>
 							<CheckBox label="Show collision mesh wireframe" id="cb_show_colmesh_wireframe" selected="false" />
 							<CheckBox label="Show wireframes of generic meshes" id="cb_show_generic_wireframe" selected="false" />
+							<CheckBox label="Show octree" id="cb_show_octree_wireframe" selected="false" />
 							<HBox bottom="5" left="5" right="5">
 								<PushButton label="Submit" right="0" event="click:onGeometryDebugMenuSubmit" />
 							</HBox>

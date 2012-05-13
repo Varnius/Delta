@@ -93,6 +93,9 @@ package net.akimirksnis.delta.game.gui.controllers
 			(minco.getCompById("cb_show_generic_wireframe") as CheckBox).selected ? 
 				Globals.gameCore.executeCommand("show_generic_wireframe 1") : 
 				Globals.gameCore.executeCommand("show_generic_wireframe 0") ;
+			(minco.getCompById("cb_show_octree_wireframe") as CheckBox).selected ? 
+				Globals.gameCore.executeCommand("show_octree_wireframe 1") : 
+				Globals.gameCore.executeCommand("show_octree_wireframe 0") ;
 		}
 		
 		/**

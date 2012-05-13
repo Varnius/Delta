@@ -14,6 +14,8 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
+	import versions.version1.a3d.A3D;
+	
 	[Event(name="hierarchyChanged", type="net.akimirksnis.delta.game.core.GameMap")]
 	public class GameMap extends Object3D
 	{
@@ -37,7 +39,8 @@ package net.akimirksnis.delta.game.core
 		private var _entities:Vector.<Entity> = new Vector.<Entity>();
 		private var _collisionMesh:Mesh;
 		private var _terrainMesh:Mesh;
-		private var _mapProperties:Dictionary = new Dictionary();	
+		private var _mapProperties:Dictionary = new Dictionary();
+		private var _wireframeRoot:Object3D;
 		
 		/*---------------------------
 		Debug
@@ -191,36 +194,37 @@ package net.akimirksnis.delta.game.core
 		}
 		
 		/*---------------------------
-		Debug methods
+		Debug helpers
 		---------------------------*/		
 
 		/**
 		 * Generates wireframes for map meshes.
 		 */
 		private function generateWireframes():void
-		{			
-			var wireframeRoot:Object3D = new Object3D();
+		{				
 			var color:uint;		
 			var w:WireFrame;
 			
+			_wireframeRoot = new Object3D();
+			
 			// Create root element as parent element for wireframes
-			wireframeRoot.name = "wireframe-root";
-			addChild(wireframeRoot);
+			_wireframeRoot.name = "wireframe-root";
+			addChild(_wireframeRoot);
 			_genericWireframes = new Object3D;
 			_genericWireframes.visible = false;
-			wireframeRoot.addChild(_genericWireframes);			
+			_wireframeRoot.addChild(_genericWireframes);			
 			
 			// Generate terrain mesh wireframe
 			_terrainMeshWireframe = Utils.generateWireframeWithChildren(_terrainMesh, TERRAIN_MESH_COLOR);
 			_terrainMeshWireframe.visible = false;
 			Renderer3D.instance.uploadResources(_terrainMeshWireframe.getResources(true));
-			wireframeRoot.addChild(_terrainMeshWireframe);
+			_wireframeRoot.addChild(_terrainMeshWireframe);
 			
 			// Generate collision mesh wireframe
 			_collisionMeshWireframe = Utils.generateWireframeWithChildren(_collisionMesh, COLLISION_MESH_COLOR);
 			_collisionMeshWireframe.visible = false;
 			Renderer3D.instance.uploadResources(_collisionMeshWireframe.getResources(true));
-			wireframeRoot.addChild(_collisionMeshWireframe);		
+			_wireframeRoot.addChild(_collisionMeshWireframe);		
 			
 			// Generate wireframes for other meshes
 			for each(var m:Mesh in _mapMeshes)
@@ -348,6 +352,14 @@ package net.akimirksnis.delta.game.core
 		public function get hierarchyText():String
 		{
 			return Utils.getColoredHierarchyAsHTMLString(this);
+		}
+
+		/**
+		 * All wireframes are children of this root object.
+		 */
+		public function get wireframeRoot():Object3D
+		{
+			return _wireframeRoot;
 		}
 	}
 }

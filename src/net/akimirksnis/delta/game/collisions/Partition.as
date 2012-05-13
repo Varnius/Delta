@@ -2,7 +2,16 @@ package net.akimirksnis.delta.game.collisions
 {
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.objects.Mesh;
+	import alternativa.engine3d.objects.WireFrame;
+	import alternativa.engine3d.primitives.Box;
+	
+	import flash.geom.Vector3D;
+	
+	import net.akimirksnis.delta.delta_internal;
+	import net.akimirksnis.delta.game.core.Renderer3D;
 
+	use namespace delta_internal;
+	
 	/**
 	 * A class representing a partition in an octree.
 	 */
@@ -13,7 +22,7 @@ package net.akimirksnis.delta.game.collisions
 		
 		private var _partitions:Vector.<Partition> = new Vector.<Partition>();
 		private var _colliders:Vector.<Mesh> = new Vector.<Mesh>();	
-		private var _split:Boolean = false;
+		private var _split:Boolean = false;		
 		
 		private var _minX:Number;
 		private var _minY:Number;
@@ -27,6 +36,9 @@ package net.akimirksnis.delta.game.collisions
 		private var newMiddleX:Number;
 		private var newMiddleY:Number;
 		private var newMiddleZ:Number;
+		private var temp:Vector3D = new Vector3D();
+		
+		private var wireframe:WireFrame;
 		
 		/**
 		 * Class constructor.
@@ -61,7 +73,7 @@ package net.akimirksnis.delta.game.collisions
 				_colliders.push(collider);
 			} else {
 				
-				// Create 8 partitions
+				// Create 8 new partitions
 				
 				newMiddleX = minX + (maxX - minX) / 2;
 				newMiddleY = minY + (maxY - minY) / 2;
@@ -134,13 +146,19 @@ package net.akimirksnis.delta.game.collisions
 		
 		/**
 		 * Removes collider.
+		 * 
+		 * @param collider Collider to remove.
 		 */
 		public function removeCollider(collider:Mesh):void
 		{
 			// todo
 		}
 		
-		// todo: should be called when object moves
+		/**
+		 * Should be called to update octree when position of the collider changes.
+		 *
+		 * @param collider Source object.
+		 */
 		public function updateByObject(collider:Mesh):void
 		{
 			
@@ -155,10 +173,39 @@ package net.akimirksnis.delta.game.collisions
 		 */
 		public function fits(collider:Mesh):Boolean
 		{
-			if( !(collider.boundBox.minX >= minX && collider.boundBox.minX < maxX &&
-			      collider.boundBox.maxX <= maxX && collider.boundBox.maxX > minX) )
+			temp.setTo(collider.boundBox.minX, collider.boundBox.minY, collider.boundBox.minZ);
+			temp.copyFrom(collider.localToGlobal(temp));
+			
+			var globalMinX:Number = temp.x;
+			var globalMinY:Number = temp.y;
+			var globalMinZ:Number = temp.z;
+			
+			temp.setTo(collider.boundBox.maxX, collider.boundBox.maxY, collider.boundBox.maxZ);
+			temp.copyFrom(collider.localToGlobal(temp));
+			
+			var globalMaxX:Number = temp.x;
+			var globalMaxY:Number = temp.y;
+			var globalMaxZ:Number = temp.z;
+			
+			// Check x
+			if( !(globalMinX >= minX && globalMinX < maxX &&
+			      globalMaxX <= maxX && globalMaxX > minX) )
 			{
-				
+				return false;
+			}
+			
+			// Check y
+			if( !(globalMinY >= minY && globalMinY < maxY &&
+				globalMaxY <= maxY && globalMaxY > minY) )
+			{
+				return false;
+			}
+			
+			// Check z
+			if( !(globalMinZ >= minZ && globalMinZ < maxZ &&
+				globalMaxZ <= maxZ && globalMaxZ > minZ) )
+			{
+				return false;
 			}
 			
 			return true;			
@@ -175,6 +222,56 @@ package net.akimirksnis.delta.game.collisions
 			{
 				p.dispose();
 			}
+		}
+		
+		/*---------------------------
+		Debug helpers
+		---------------------------*/
+		
+		/**
+		 * Generates wireframe of partition or its children.
+		 * 
+		 * @param Root object to attach created wireframes to.
+		 */
+		delta_internal function generateWireframe(root:Object3D):void
+		{
+			// Skip this partition if it`s split
+			if(_split)
+			{
+				for each(var p:Partition in _partitions)
+				{
+					p.generateWireframe(root);
+				}
+				
+				return;
+			}
+			
+			// Generate set of points for wireframe
+			var points:Vector.<Vector3D> = new Vector.<Vector3D>();
+			points.push(
+				new Vector3D(minX, minY, minZ),
+				new Vector3D(maxX, minY, minZ),
+				new Vector3D(maxX, maxY, minZ),
+				new Vector3D(minX, maxY, minZ),
+				new Vector3D(minX, minY, minZ),
+				new Vector3D(minX, minY, maxZ),
+				new Vector3D(maxX, minY, maxZ),
+				new Vector3D(maxX, maxY, maxZ),
+				new Vector3D(minX, maxY, maxZ),
+				new Vector3D(minX, minY, maxZ),
+				new Vector3D(minX, maxY, maxZ),
+				new Vector3D(minX, maxY, minZ),
+				new Vector3D(minX, maxY, maxZ),
+				new Vector3D(maxX, maxY, maxZ),
+				new Vector3D(maxX, maxY, minZ),
+				new Vector3D(maxX, maxY, maxZ),
+				new Vector3D(maxX, minY, maxZ),
+				new Vector3D(maxX, minY, minZ)
+			);
+			
+			wireframe = WireFrame.createLineStrip(points, 0xFFFFFF, 1, 1);
+			Renderer3D.instance.uploadResources(wireframe.getResources());
+			root.addChild(wireframe);
 		}
 		
 		/*---------------------------

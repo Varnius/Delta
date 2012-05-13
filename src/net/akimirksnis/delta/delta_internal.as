@@ -1,4 +1,4 @@
-package net.akimirksnis.delta.game.namespaces
+package net.akimirksnis.delta
 {
 	public namespace delta_internal = "http://www.akimirksnis.net/delta";
 }

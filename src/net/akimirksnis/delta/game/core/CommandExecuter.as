@@ -6,8 +6,9 @@ package net.akimirksnis.delta.game.core
 	
 	import flash.events.Event;
 	
+	import net.akimirksnis.delta.game.collisions.CollisionOctree;
 	import net.akimirksnis.delta.game.entities.units.Unit;
-	import net.akimirksnis.delta.game.namespaces.delta_internal;
+	import net.akimirksnis.delta.delta_internal;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	use namespace delta_internal;
@@ -127,6 +128,11 @@ package net.akimirksnis.delta.game.core
 					case "show_generic_wireframe":
 					{
 						GameMap.currentMap.genericWireframes.visible = Boolean(value);
+						break;
+					}
+					case "show_octree_wireframe":
+					{
+						CollisionOctree.instance.wireframeVisible = Boolean(value);
 						break;
 					}
 					case "show_light_sources":

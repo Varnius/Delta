@@ -25,7 +25,7 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.loaders.CoreLoader;
 	import net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent;
-	import net.akimirksnis.delta.game.namespaces.delta_internal;
+	import net.akimirksnis.delta.delta_internal;
 	import net.akimirksnis.delta.game.utils.Globals;
 	
 	use namespace delta_internal;
