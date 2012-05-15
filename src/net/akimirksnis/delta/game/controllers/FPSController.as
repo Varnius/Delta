@@ -11,6 +11,7 @@ package net.akimirksnis.delta.game.controllers
 	import flash.events.MouseEvent;
 	import flash.geom.Vector3D;
 	
+	import net.akimirksnis.delta.game.collisions.CollisionOctreeWrapper;
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.utils.Globals;
@@ -399,7 +400,7 @@ package net.akimirksnis.delta.game.controllers
 				attachListeners();
 				enableGameCursor();
 				enableMouseLock();
-				_followUnit.m.visible = false;
+				//_followUnit.m.visible = false;
 				_enabled = true;				
 			}			
 		}
@@ -414,8 +415,9 @@ package net.akimirksnis.delta.game.controllers
 			{
 				_followUnit = value;
 				_followUnit.m.addChild(_camera);
-				_camera.z += _followUnit.m.boundBox.maxZ * 0.95;
-				_followUnit.m.visible = false;
+				//_camera.z += _followUnit.m.boundBox.maxZ * 0.95;
+				_camera.z += _followUnit.m.boundBox.maxZ * 1.25;
+				//_followUnit.m.visible = false;
 				
 				// todo
 				//_camera.z += _followUnit.model.boundBox.maxZ * 3;				

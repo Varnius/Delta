@@ -127,6 +127,19 @@ package net.akimirksnis.delta.game.core
 		}
 		
 		/**
+		 * Disposes multiple resources.
+		 * 
+		 * @param resource Resources to dispose.
+		 */
+		public function disposeResources(resources:Vector.<Resource>):void
+		{
+			for each(var resource:Resource in resources)
+			{
+				resource.dispose();
+			}
+		}
+		
+		/**
 		 * Attaches all lights, passed in vector.
 		 * 
 		 * @param lights Vector containing lights to attach.

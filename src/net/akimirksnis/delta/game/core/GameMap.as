@@ -8,13 +8,12 @@ package net.akimirksnis.delta.game.core
 	import flash.events.Event;
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
+	import flash.utils.getTimer;
 	
-	import net.akimirksnis.delta.game.collisions.CollisionOctree;
+	import net.akimirksnis.delta.game.collisions.CollisionOctreeWrapper;
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
-	
-	import versions.version1.a3d.A3D;
 	
 	[Event(name="hierarchyChanged", type="net.akimirksnis.delta.game.core.GameMap")]
 	public class GameMap extends Object3D
@@ -30,7 +29,12 @@ package net.akimirksnis.delta.game.core
 		private static var _currentMap:GameMap;
 		
 		private var zeroVector:Vector3D = new Vector3D();
-		private var collisionOctree:CollisionOctree = CollisionOctree.instance;
+		
+		// Used for terrain and other stationary objects (entities)
+		private var _staticCollisionOctree:CollisionOctreeWrapper;
+		
+		// Used for moving entities
+		private var _dynamicCollisionOctree:CollisionOctreeWrapper;
 		
 		private var _mapMeshes:Vector.<Mesh> = new Vector.<Mesh>();		
 		private var _mapObjects:Vector.<Object3D> = new Vector.<Object3D>();
@@ -79,22 +83,34 @@ package net.akimirksnis.delta.game.core
 			_collisionMesh = Mesh(getObjectByName(COLLISION_MESH_NAME));
 			
 			// Hide collision mesh
+			// todo: still shows up somehow
 			_collisionMesh.visible = false;
 			
 			// Use terrain mesh for collisions if collision mesh is unavailable
 			if(_collisionMesh == null)
 			{
 				_collisionMesh = _terrainMesh;
-			}
+			}	
 			
 			if(Globals.DEBUG_MODE)
 			{
 				generateWireframes();
 			}
 			
-			// Generate collision octree
-			collisionOctree.generateOctree(this);
+			// Create an octree (from collision mesh) for static colliders
+			_staticCollisionOctree = new CollisionOctreeWrapper(_collisionMesh);
 			
+			// Add all collision mesh colliders
+			for each(var m:Mesh in Utils.getMeshHierachyAsVector(_collisionMesh))
+			{
+				_staticCollisionOctree.rootPartition.addCollider(m);
+			}
+			
+			trace(_staticCollisionOctree.rootPartition.getOctreeHierarchyAsString());
+			
+			// Setup dynamic collision octree
+			_dynamicCollisionOctree = new CollisionOctreeWrapper();			
+						
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
 		
@@ -123,6 +139,8 @@ package net.akimirksnis.delta.game.core
 		 */
 		public function addEntity(entity:Entity, markerName:String = ""):void
 		{
+			trace("[GameMap] > Adding entity: " + entity);
+			
 			var marker:Object3D;
 			var globalCoords:Vector3D;
 			
@@ -133,7 +151,7 @@ package net.akimirksnis.delta.game.core
 				marker = this.getObjectByName(markerName);
 				
 				// todo: remove if
-				if(marker)
+				if(marker != null)
 				{
 					globalCoords = marker.localToGlobal(zeroVector);
 					entity.m.x = globalCoords.x;
@@ -144,6 +162,18 @@ package net.akimirksnis.delta.game.core
 			
 			addChild(entity.m);
 			
+			// Add entity as collider in the collision octree
+			/*if(!entity.excludeFromCollisions)
+			{
+				// If possible, add collision mesh of the entity
+				if(entity.collisionMesh != null)
+				{
+					_staticCollisionOctree.rootPartition.addCollider(entity.collisionMesh);
+				} else {
+					_staticCollisionOctree.rootPartition.addCollider(entity.m);
+				}				
+			}*/
+						
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
 		
@@ -360,6 +390,22 @@ package net.akimirksnis.delta.game.core
 		public function get wireframeRoot():Object3D
 		{
 			return _wireframeRoot;
+		}
+		
+		/**
+		 * Octree of static colliders.
+		 */
+		public function get staticCollisionOctree():CollisionOctreeWrapper
+		{
+			return _staticCollisionOctree;
+		}
+		
+		/**
+		 * Octree of dynamic colliders.
+		 */
+		public function get dynamicCollisionOctree():CollisionOctreeWrapper
+		{
+			return _dynamicCollisionOctree;
 		}
 	}
 }

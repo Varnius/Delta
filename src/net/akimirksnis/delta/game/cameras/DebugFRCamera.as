@@ -25,11 +25,6 @@ package net.akimirksnis.delta.game.cameras
 			// Hide Alternativa logo
 			view.hideLogo();
 			
-			// Set default camera orientation
-			rotationX = Utils.degToRad(-160);
-			y = -600;
-			z = 1200;
-			
 			// Debug
 			diagramHorizontalMargin = 10;
 			diagramVerticalMargin = 30;

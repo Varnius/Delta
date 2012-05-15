@@ -186,6 +186,7 @@ package net.akimirksnis.delta.game.entities.units
 		
 		public function think():void
 		{
+			// Handle movement
 			move();
 		}
 		

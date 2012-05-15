@@ -6,7 +6,7 @@ package net.akimirksnis.delta.game.core
 	
 	import flash.events.Event;
 	
-	import net.akimirksnis.delta.game.collisions.CollisionOctree;
+	import net.akimirksnis.delta.game.collisions.CollisionOctreeWrapper;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.delta_internal;
 	import net.akimirksnis.delta.game.utils.Utils;
@@ -132,7 +132,7 @@ package net.akimirksnis.delta.game.core
 					}
 					case "show_octree_wireframe":
 					{
-						CollisionOctree.instance.wireframeVisible = Boolean(value);
+						GameMap.currentMap.staticCollisionOctree.wireframeVisible = Boolean(value);
 						break;
 					}
 					case "show_light_sources":
