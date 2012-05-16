@@ -133,7 +133,7 @@ package net.akimirksnis.delta.game.entities
 		
 		public function get collisionMesh():Mesh
 		{
-			return _collisionMesh;
+			return _collisionMesh != null ? _collisionMesh : _model;
 		}
 		
 		public function get excludeFromCollisions():Boolean

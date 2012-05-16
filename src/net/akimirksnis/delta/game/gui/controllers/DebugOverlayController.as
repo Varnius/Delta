@@ -93,9 +93,20 @@ package net.akimirksnis.delta.game.gui.controllers
 			(minco.getCompById("cb_show_generic_wireframe") as CheckBox).selected ? 
 				Globals.gameCore.executeCommand("show_generic_wireframe 1") : 
 				Globals.gameCore.executeCommand("show_generic_wireframe 0") ;
-			(minco.getCompById("cb_show_octree_wireframe") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_octree_wireframe 1") : 
-				Globals.gameCore.executeCommand("show_octree_wireframe 0") ;
+		}
+		
+		/**
+		 * Handles octree debug menu input.
+		 * @param e Event object.
+		 */
+		public function onOctreeDebugMenuSubmit(e:Event = null):void
+		{
+			(minco.getCompById("cb_show_static_octree") as CheckBox).selected ? 
+				Globals.gameCore.executeCommand("show_static_octree 1") : 
+				Globals.gameCore.executeCommand("show_static_octree 0") ;
+			(minco.getCompById("cb_show_dynamic_octree") as CheckBox).selected ? 
+				Globals.gameCore.executeCommand("show_dynamic_octree 1") : 
+				Globals.gameCore.executeCommand("show_dynamic_octree 0") ;
 		}
 		
 		/**

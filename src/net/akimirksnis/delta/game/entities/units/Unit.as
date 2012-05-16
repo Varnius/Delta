@@ -157,7 +157,7 @@ package net.akimirksnis.delta.game.entities.units
 				aniSwitcher.activate(aniIdle, 0.1);
 				
 				// Register loop callback
-				Globals.gameCore.addLoopCallback(aniController.update);
+				Globals.gameCore.addLoopCallbackPre(aniController.update);
 			} else {
 				throw new Error("[Unit] Animation properties of the unit not found.");
 			}

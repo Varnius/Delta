@@ -24,7 +24,6 @@ package net.akimirksnis.delta.game.gui.views
 							<CheckBox label="Show terrain wireframe" id="cb_show_terrain_wireframe" selected="false"/>
 							<CheckBox label="Show collision mesh wireframe" id="cb_show_colmesh_wireframe" selected="false" />
 							<CheckBox label="Show wireframes of generic meshes" id="cb_show_generic_wireframe" selected="false" />
-							<CheckBox label="Show octree" id="cb_show_octree_wireframe" selected="false" />
 							<HBox bottom="5" left="5" right="5">
 								<PushButton label="Submit" right="0" event="click:onGeometryDebugMenuSubmit" />
 							</HBox>
@@ -55,8 +54,19 @@ package net.akimirksnis.delta.game.gui.views
 						</VBox>						
 					</Window>
 			
+					<!-- Octree debug menu -->
+					<Window id="octree_debug_menu" title="Debug octrees" width="200" height="190" left="620" bottom="5" draggable="true">
+						<VBox left="15" right="5" top="15" bottom="15" spacing="13">
+							<CheckBox label="Show static octree" id="cb_show_static_octree" selected="false" />
+							<CheckBox label="Show dynamic octree" id="cb_show_dynamic_octree" selected="false" />
+							<HBox bottom="5" left="5" right="5">
+								<PushButton label="Submit" right="0" event="click:onOctreeDebugMenuSubmit" />
+							</HBox>
+						</VBox>
+					</Window>
+			
 					<!-- Camera debug menu -->
-					<Window id="camera_debug_menu" title="Camera mode" width="120" height="190" left="620" bottom="5" draggable="true" hasMinimizeButton="true">
+					<Window id="camera_debug_menu" title="Camera mode" width="120" height="190" left="825" bottom="5" draggable="true" hasMinimizeButton="true">
 						<VBox bottom="5" left="5" right="5" top="5">
 							<PushButton label="Free Roam" right="0" event="click:onUseFreeRoamCameraSubmit" />
 							<PushButton label="FPS" right="0" event="click:onUseStandartCameraSubmit" />
@@ -64,7 +74,7 @@ package net.akimirksnis.delta.game.gui.views
 					</Window>
 			
 					<!-- Hierarchy -->
-					<Window title="Level hierarchy" right="5" top="5" width="500" height="300" draggable="true" hasMinimizeButton="true">
+					<Window title="Level hierarchy" right="5" top="5" width="500" height="300" draggable="true" hasMinimizeButton="false">
 						<VBox bottom="25" left="5" right="5" top="5">
 							<TextArea id="textarea-hierarchy" html="true" editable="false" top="0" left="0" bottom="0" right="0"/>
 						</VBox>	

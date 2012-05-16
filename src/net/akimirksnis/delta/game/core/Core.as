@@ -43,7 +43,8 @@ package net.akimirksnis.delta.game.core
 		
 		// Collections	
 		private var _units:Vector.<Unit> = new Vector.<Unit>();
-		private var loopCallbacks:Vector.<Function> = new Vector.<Function>();
+		private var loopCallbacksPre:Vector.<Function> = new Vector.<Function>();
+		private var loopCallbacksPost:Vector.<Function> = new Vector.<Function>();
 		
 		// Controllers		
 		private var guiController:GuiController;
@@ -217,7 +218,7 @@ package net.akimirksnis.delta.game.core
 			renderer.mainContainer.calculateBoundBox();
 			
 			_unit = new Walker2();
-			map.addEntity(_unit, "marker-spawn1");
+			map.addEntity(_unit, "marker-spawn1", true);
 			_units.push(_unit);			
 			ctents.push(_unit);
 			
@@ -297,9 +298,16 @@ package net.akimirksnis.delta.game.core
 		{			
 			// Measure code execution time - start
 			renderer.camera.startTimer();
+			renderer.camera.startCPUTimer();
 			
-			// Run loop callbacks (pre-render)
-			for each(var callback:Function in loopCallbacks)
+			// Run loop callbacks (1)
+			for each(var callback:Function in loopCallbacksPre)
+			{
+				callback();
+			}
+			
+			// Run loop callbacks (2)
+			for each(callback in loopCallbacksPost)
 			{
 				callback();
 			}
@@ -308,31 +316,57 @@ package net.akimirksnis.delta.game.core
 			renderer.camera.stopTimer();
 			
 			// Render frame
-			renderer3D.renderFrame();
+			renderer3D.renderFrame();		
 		}
 		
 		/**
-		 * Adds function to execute before randering frame.
+		 * Adds function to execute before rendering frame.
 		 * 
 		 * @param f Function to add.
 		 */
-		public function addLoopCallback(f:Function):void
+		public function addLoopCallbackPre(f:Function):void
 		{
-			loopCallbacks.push(f);
+			loopCallbacksPre.push(f);
 		}
 		
 		/**
-		 * Removes function from pre-frame rendering execution queue
+		 * Adds function to execute before rendering frame but after executing "Pre" sequence.
+		 * 
+		 * @param f Function to add.
+		 */
+		public function addLoopCallbackPost(f:Function):void
+		{
+			loopCallbacksPost.push(f);
+		}
+		
+		/**
+		 * Removes function from "Pre" rendering execution queue.
 		 * 
 		 * @param f Function to remove.
 		 */
 		public function removeLoopCallbackPre(functionToRemove:Function):void
 		{
-			for each(var f:Function in loopCallbacks)
+			for each(var f:Function in loopCallbacksPre)
 			{
 				if(f == functionToRemove)
 				{
-					loopCallbacks.splice(loopCallbacks.indexOf(f), 1);
+					loopCallbacksPre.splice(loopCallbacksPre.indexOf(f), 1);
+				}
+			}
+		}
+		
+		/**
+		 * Removes function from "Post" rendering execution queue.
+		 * 
+		 * @param f Function to remove.
+		 */
+		public function removeLoopCallbackPost(functionToRemove:Function):void
+		{
+			for each(var f:Function in loopCallbacksPost)
+			{
+				if(f == functionToRemove)
+				{
+					loopCallbacksPre.splice(loopCallbacksPost.indexOf(f), 1);
 				}
 			}
 		}
@@ -418,7 +452,7 @@ package net.akimirksnis.delta.game.core
 				_cameraController = controller;
 				Globals.cameraController = controller;
 				renderer3D.camera = controller.camera;
-				addLoopCallback(controller.think);
+				addLoopCallbackPre(controller.think);
 				_cameraController.enabled = true;
 				guiController.bringToTop();
 			}

@@ -6,32 +6,39 @@ package net.akimirksnis.delta.game.collisions
 	
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
-	import flash.utils.getTimer;
 	
 	import net.akimirksnis.delta.delta_internal;
 	import net.akimirksnis.delta.game.core.GameMap;
-	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	use namespace delta_internal;
 
+	/**
+	 * Collision octree wrapper. Includes some performance optimisations and should be used instead of raw octree.
+	 */
 	public class CollisionOctreeWrapper
 	{		
-		private static var instances:int = 0;		
-		private var _rootPartition:Partition;
-		private var wireframeRoot:Object3D;
+		delta_internal static var rootPartitions:Vector.<Partition> = new Vector.<Partition>();
+		private static var instances:int = 0;
+		private static var instanceNum:int;		
 		
 		// Use a dictionary for quickly accessing partition that holds
-		// needed collider without recursively searchin the whole octree
+		// needed collider without recursively searching the whole tree
 		private var collidersAndPartitions:Dictionary = new Dictionary();
+		
+		// Debug
+		private var wireframeRoot:Object3D;
 		
 		/**
 		 * Class constructor.
 		 */
 		public function CollisionOctreeWrapper(source:Mesh = null)
-		{			
+		{		
 			trace("[CollisionOctree] > Generating octree");
+			instanceNum = instances;			
+			
+			var rootPartition:Partition;
 			
 			if(source != null)
 			{
@@ -48,37 +55,39 @@ package net.akimirksnis.delta.game.collisions
 				// Reset partitioning
 				// Position root partition to have its front left bottom corner at the
 				// global position of (minX, minY, minZ) of source mesh bound box
-				_rootPartition = new Partition(
+				rootPartition = new Partition(
 					minGlobal.x,
 					minGlobal.y,
 					minGlobal.z,
 					minGlobal.x + rootEdgeLength,
 					minGlobal.y + rootEdgeLength,
 					minGlobal.z + rootEdgeLength,
-					collidersAndPartitions
+					collidersAndPartitions,
+					instanceNum
 				);		
 			} else {
-				_rootPartition = new Partition(
+				rootPartition = new Partition(
 					0,
 					0,
 					0,
 					100,
 					100,
 					100,
-					collidersAndPartitions
+					collidersAndPartitions,
+					instanceNum
 				);					
 			}
 			
-			_rootPartition.name = "partition-root";				
+			rootPartition.name = "partition-root";
+			rootPartitions[instances] = rootPartition;
 			
 			if(Globals.DEBUG_MODE)
 			{
 				wireframeRoot = new Object3D();
 				wireframeRoot.name = "octree-wireframe-root" + instances;
-				// todo
-				//wireframeRoot.visible = false;
+				wireframeRoot.visible = false;
 				GameMap.currentMap.wireframeRoot.addChild(wireframeRoot);
-				_rootPartition.wireframeRoot = wireframeRoot;
+				rootPartition.wireframeRoot = wireframeRoot;
 			}
 			
 			instances++;
@@ -93,9 +102,19 @@ package net.akimirksnis.delta.game.collisions
 		 * 
 		 * @param collider Collider to check.
 		 */
-		public function updateColliderPosition(collider:Mesh):void
+		public function updateByCollider(collider:Mesh):void
 		{		
-			Partition(collidersAndPartitions[collider]).updateColliderPosition(collider);	
+			Partition(collidersAndPartitions[collider]).updateColliderPosition(collider);
+		}
+		
+		/**
+		 * Adds a collider to the octree.
+		 * 
+		 * @param collider Collider to add.
+		 */
+		public function addCollider(collider:Mesh):void
+		{		
+			rootPartitions[instanceNum].addCollider(collider);
 		}
 		
 		/*---------------------------
@@ -120,14 +139,6 @@ package net.akimirksnis.delta.game.collisions
 			{
 				wireframeRoot.visible = value;
 			}		
-		}	
-
-		/**
-		 * Root partition of the octree.
-		 */
-		public function get rootPartition():Partition
-		{
-			return _rootPartition;
 		}
 	}
 }

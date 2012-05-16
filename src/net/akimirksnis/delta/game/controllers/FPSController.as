@@ -13,6 +13,7 @@ package net.akimirksnis.delta.game.controllers
 	
 	import net.akimirksnis.delta.game.collisions.CollisionOctreeWrapper;
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
+	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;

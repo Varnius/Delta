@@ -34,7 +34,9 @@ package net.akimirksnis.delta.game.core
 		private var _staticCollisionOctree:CollisionOctreeWrapper;
 		
 		// Used for moving entities
-		private var _dynamicCollisionOctree:CollisionOctreeWrapper;
+		private var _dynamicCollisionOctree:CollisionOctreeWrapper;	
+		private var _dynamicEntities:Vector.<Entity> = new Vector.<Entity>();
+		
 		
 		private var _mapMeshes:Vector.<Mesh> = new Vector.<Mesh>();		
 		private var _mapObjects:Vector.<Object3D> = new Vector.<Object3D>();
@@ -99,17 +101,17 @@ package net.akimirksnis.delta.game.core
 			
 			// Create an octree (from collision mesh) for static colliders
 			_staticCollisionOctree = new CollisionOctreeWrapper(_collisionMesh);
+			_staticCollisionOctree.wireframeVisible = false;
 			
 			// Add all collision mesh colliders
 			for each(var m:Mesh in Utils.getMeshHierachyAsVector(_collisionMesh))
 			{
-				_staticCollisionOctree.rootPartition.addCollider(m);
-			}
-			
-			trace(_staticCollisionOctree.rootPartition.getOctreeHierarchyAsString());
+				_staticCollisionOctree.addCollider(m);
+			}		
 			
 			// Setup dynamic collision octree
-			_dynamicCollisionOctree = new CollisionOctreeWrapper();			
+			_dynamicCollisionOctree = new CollisionOctreeWrapper();
+			Core.instance.addLoopCallbackPost(updateDynamicCollisionOctree);
 						
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
@@ -136,8 +138,9 @@ package net.akimirksnis.delta.game.core
 		 * 
 		 * @param entity Entity to add.
 		 * @param marker Optional marker name for setting position of an entity.
+		 * @param dynamic Marks whether entity is static or dynamic.
 		 */
-		public function addEntity(entity:Entity, markerName:String = ""):void
+		public function addEntity(entity:Entity, markerName:String = "", dynamic:Boolean = false):void
 		{
 			trace("[GameMap] > Adding entity: " + entity);
 			
@@ -163,16 +166,16 @@ package net.akimirksnis.delta.game.core
 			addChild(entity.m);
 			
 			// Add entity as collider in the collision octree
-			/*if(!entity.excludeFromCollisions)
+			if(!entity.excludeFromCollisions)
 			{
-				// If possible, add collision mesh of the entity
-				if(entity.collisionMesh != null)
+				if(dynamic)				
 				{
-					_staticCollisionOctree.rootPartition.addCollider(entity.collisionMesh);
+					_dynamicCollisionOctree.addCollider(entity.collisionMesh);
+					_dynamicEntities.push(entity);
 				} else {
-					_staticCollisionOctree.rootPartition.addCollider(entity.m);
-				}				
-			}*/
+					_staticCollisionOctree.addCollider(entity.collisionMesh);
+				}
+			}
 						
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
@@ -221,6 +224,21 @@ package net.akimirksnis.delta.game.core
 			}
 			
 			return e;
+		}
+		
+		/*---------------------------
+		Helpers
+		---------------------------*/
+		
+		/**
+		 * Updates dynamic collision octree each frame.
+		 */
+		private function updateDynamicCollisionOctree():void
+		{
+			for each(var e:Entity in _dynamicEntities)
+			{
+				_dynamicCollisionOctree.updateByCollider(e.collisionMesh);
+			}
 		}
 		
 		/*---------------------------

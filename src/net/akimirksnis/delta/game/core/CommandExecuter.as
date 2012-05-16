@@ -130,9 +130,14 @@ package net.akimirksnis.delta.game.core
 						GameMap.currentMap.genericWireframes.visible = Boolean(value);
 						break;
 					}
-					case "show_octree_wireframe":
+					case "show_static_octree":
 					{
 						GameMap.currentMap.staticCollisionOctree.wireframeVisible = Boolean(value);
+						break;
+					}
+					case "show_dynamic_octree":
+					{
+						GameMap.currentMap.dynamicCollisionOctree.wireframeVisible = Boolean(value);
 						break;
 					}
 					case "show_light_sources":
