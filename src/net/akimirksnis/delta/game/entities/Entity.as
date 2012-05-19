@@ -3,7 +3,6 @@ package net.akimirksnis.delta.game.entities
 	import alternativa.engine3d.animation.AnimationController;
 	import alternativa.engine3d.animation.AnimationSwitcher;
 	import alternativa.engine3d.core.BoundBox;
-	import alternativa.engine3d.core.events.MouseEvent3D;
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
 	
@@ -11,7 +10,6 @@ package net.akimirksnis.delta.game.entities
 	import flash.geom.Vector3D;
 	
 	import net.akimirksnis.delta.game.core.Library;
-	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;
 	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class Entity extends EventDispatcher
@@ -20,22 +18,28 @@ package net.akimirksnis.delta.game.entities
 		
 		// Model mesh/skin used within the entity
 		protected var _model:Mesh;
+		
 		// Geometry used for collisions
 		protected var _collisionMesh:Mesh;
-		private var _excludeFromCollisions:Boolean = false;
+		protected var _excludeFromCollisions:Boolean = false;
+		protected var _dynamicCollider:Boolean = false;
+		
 		// Entity type
 		protected var _type:String = EntityType.ENTITY_UNDEFINED;
+		
 		// Entity unique name with unique number at the end, like unit_walker1, unit_walker2 etc
-		protected var _namex:String = "default_entity_name";		
-		// Debug
-		protected var _showBoundBox:Boolean = false;
-		protected var _boundBoxWireframe:WireFrame;		
+		protected var _namex:String = "default_entity_name";	
+		
 		//Animation properties		
 		protected var aniController:AnimationController;
 		protected var aniSwitcher:AnimationSwitcher;
 		protected var currentAnimation:String;
 		
 		protected var library:Library = Library.instance;
+		
+		// Debug
+		protected var _showBoundBox:Boolean = false;
+		protected var _boundBoxWireframe:WireFrame;	
 		
 		public function Entity()
 		{
@@ -91,27 +95,12 @@ package net.akimirksnis.delta.game.entities
 		
 		protected function setupEventHandlers():void
 		{
-			m.addEventListener(MouseEvent3D.CLICK, onSingleClick, false, 0, true);
-			m.addEventListener(MouseEvent3D.CLICK, onDoubleClick, false, 0, true);
+			//
 		}
 		
 		/*---------------------------
-		Event handlers
+		Event callbacks
 		---------------------------*/
-		
-		protected function onSingleClick(e:MouseEvent3D):void
-		{
-			var ev:EntityMouseEvent3D = new EntityMouseEvent3D(e.type, e.bubbles, e.localX, e.localY, e.localZ, e.relatedObject, e.ctrlKey, e.altKey, e.shiftKey, e.buttonDown, e.delta);
-			ev.targetEntity = this;
-			dispatchEvent(ev);
-		}
-		
-		protected function onDoubleClick(e:MouseEvent3D):void
-		{
-			var ev:EntityMouseEvent3D = new EntityMouseEvent3D(e.type, e.bubbles, e.localX, e.localY, e.localZ, e.relatedObject, e.ctrlKey, e.altKey, e.shiftKey, e.buttonDown, e.delta);
-			ev.targetEntity = this;
-			dispatchEvent(ev);
-		}
 		
 		/*---------------------------
 		Misc
@@ -172,12 +161,13 @@ package net.akimirksnis.delta.game.entities
 		
 		public function dispose():void
 		{			
-			// Remove unneeded event lsiteners
-			m.removeEventListener(MouseEvent3D.CLICK, onSingleClick, false);
-			m.removeEventListener(MouseEvent3D.DOUBLE_CLICK, onDoubleClick, false);
-			
 			// Nullify model reference
 			_model = null;
+		}
+
+		public function get dynamicCollider():Boolean
+		{
+			return _dynamicCollider;
 		}
 	}
 }

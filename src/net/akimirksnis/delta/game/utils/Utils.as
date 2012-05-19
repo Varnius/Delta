@@ -307,7 +307,7 @@ package net.akimirksnis.delta.game.utils
 		 * @param root Hierarchy root object.
 		 * @return Hierarchy vector representation.
 		 */
-		public static function getMeshHierachyAsVector(root:Object3D):Vector.<Mesh>
+		public static function getFlattenedMeshHierachy(root:Object3D):Vector.<Mesh>
 		{
 			var result:Vector.<Mesh> = new Vector.<Mesh>();
 			
@@ -320,7 +320,7 @@ package net.akimirksnis.delta.game.utils
 			// Loop through children and collect meshes
 			for(var i:int = 0; i < root.numChildren; i++)
 			{
-				result = result.concat(getMeshHierachyAsVector(root.getChildAt(i)));
+				result = result.concat(getFlattenedMeshHierachy(root.getChildAt(i)));
 			}
 			
 			// Quickly drop duplicates

@@ -2,6 +2,7 @@ package net.akimirksnis.delta.game.entities.units
 {
 	import alternativa.engine3d.animation.AnimationClip;
 	import alternativa.engine3d.collisions.EllipsoidCollider;
+	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.materials.FillMaterial;
 	import alternativa.engine3d.primitives.GeoSphere;
 	
@@ -109,6 +110,13 @@ package net.akimirksnis.delta.game.entities.units
 		public function Unit()
 		{
 			super();
+			
+			/*---------------------------
+			Calls to Entity superclass
+			---------------------------*/
+			
+			_excludeFromCollisions = false;
+			_dynamicCollider = true;
 		}
 		
 		/*---------------------------
@@ -368,16 +376,25 @@ package net.akimirksnis.delta.game.entities.units
 			// Calculate time since last tick (in seconds)
 			elapsed = (timeNow - lastTime) / 1000;
 			
+			// Get potential colliders
+			var potentialColliders:Vector.<Object3D> = 
+				GameMap.currentMap.dynamicCollisionOctree.getPotentialColliders(this.collisionMesh).concat(
+					GameMap.currentMap.staticCollisionOctree.getPotentialColliders(this.collisionMesh)
+				);
+			
+			//trace(potentialColliders);
+			
 			// Set current ellipsoid position
 			source.setTo(m.x, m.y, m.z + this.m.boundBox.maxZ / 2);
 			
 			// Check for surface under the character				
-			onGround = collider.getCollision(
+			onGround = collider.getCollision2(
 				source,
 				Utils.DOWN_VECTOR,
 				collisionPoint,
 				collisionPlane,
-				GameMap.currentMap.collisionMesh
+				potentialColliders,
+				true
 			);			
 			
 			if(onGround && !jumpTick)
@@ -405,9 +422,14 @@ package net.akimirksnis.delta.game.entities.units
 				velocity.y * elapsed,
 				velocity.z * elapsed
 			);
-			
+
 			// Calculate final destination point (taking in the account collisions and gravity)
-			var destination:Vector3D = collider.calculateDestination(source, displacement, GameMap.currentMap.collisionMesh);
+			var destination:Vector3D = collider.calculateDestination2(
+				source,
+				displacement,
+				potentialColliders,
+				true
+			);			
 			
 			// Set new coordinates of this unit
 			m.x = destination.x;
@@ -419,15 +441,14 @@ package net.akimirksnis.delta.game.entities.units
 			walls and other stuff that unit can bump into
 			----------------------*/
 			
-			// Collide
-			// todo: get collision data from calculateDestination for performance?
-			var collisionOccured:Boolean = collider.getCollision(
+			var collisionOccured:Boolean = collider.getCollision2(
 				source,
 				displacement,
 				collisionPoint,
 				collisionPlane,
-				GameMap.currentMap.collisionMesh
-			);
+				potentialColliders,
+				true
+			);			
 			
 			if(collisionOccured)
 			{
@@ -444,7 +465,7 @@ package net.akimirksnis.delta.game.entities.units
 					finalDestinationNoCollision.incrementBy(displacement);
 					
 					// Intersect collision plane
-					Intersector.intersectPlane(
+					Intersector.intersectLinePlane(
 						collisionPlane,
 						collisionPoint,
 						finalDestinationNoCollision,
@@ -465,7 +486,7 @@ package net.akimirksnis.delta.game.entities.units
 			}
 
 			// Last time is now
-			lastTime = timeNow;
+			lastTime = timeNow;		
 		}
 
 		/*---------------------------

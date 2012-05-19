@@ -22,7 +22,7 @@ package net.akimirksnis.delta.game.intersections
 		 * @param skipIntersectionAtExactEnd Skip intersections that happen at the exact end of a segment.
 		 * return RayIntersectionData object.
 		 */
-		public static function intesectSegment(mesh:Mesh, segment:Segment, skipIntersectionsAtExactEnd:Boolean = false):RayIntersectionData
+		public static function intesectSegmentMesh(mesh:Mesh, segment:Segment, skipIntersectionsAtExactEnd:Boolean = false):RayIntersectionData
 		{
 			var intersectionData:RayIntersectionData;
 			var direction:Vector3D = segment.getUnitVector();
@@ -60,7 +60,7 @@ package net.akimirksnis.delta.game.intersections
 		 * @param linePoint A point within the ray.
 		 * @param result Result vector that is filled after calculating intersection.
 		 */
-		public static function intersectPlane(planeNormal:Vector3D, planePoint:Vector3D, linePoint:Vector3D, result:Vector3D):Vector3D
+		public static function intersectLinePlane(planeNormal:Vector3D, planePoint:Vector3D, linePoint:Vector3D, result:Vector3D):Vector3D
 		{			
 			result.copyFrom(planeNormal);
 			

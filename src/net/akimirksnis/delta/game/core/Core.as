@@ -13,6 +13,7 @@ package net.akimirksnis.delta.game.core
 	import flash.events.EventDispatcher;
 	import flash.geom.Vector3D;
 	
+	import net.akimirksnis.delta.delta_internal;
 	import net.akimirksnis.delta.game.cameras.DebugFRCamera;
 	import net.akimirksnis.delta.game.cameras.FPSCamera;
 	import net.akimirksnis.delta.game.controllers.*;
@@ -25,7 +26,6 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.loaders.CoreLoader;
 	import net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent;
-	import net.akimirksnis.delta.delta_internal;
 	import net.akimirksnis.delta.game.utils.Globals;
 	
 	use namespace delta_internal;
@@ -215,12 +215,16 @@ package net.akimirksnis.delta.game.core
 			
 			
 			// CHARACTER			
-			renderer.mainContainer.calculateBoundBox();
+			//renderer.mainContainer.calculateBoundBox();
 			
 			_unit = new Walker2();
-			map.addEntity(_unit, "marker-spawn1", true);
+			map.addEntity(_unit, "marker-spawn1");
 			_units.push(_unit);			
 			ctents.push(_unit);
+			
+			map.addEntity(new Walker2, "marker-spawn1");
+			
+			
 			
 			/*var statice:Teapot = new Teapot();
 			library.map.addChild(statice.model);

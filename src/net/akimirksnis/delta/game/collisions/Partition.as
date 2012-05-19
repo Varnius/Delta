@@ -17,14 +17,9 @@ package net.akimirksnis.delta.game.collisions
 	 * A class representing a partition in an octree.
 	 */
 	public class Partition
-	{
-		// Split partition if there are defined number of colliders
-		private static const MAX_COLLIDERS_PER_PARTITION:int = 2;
-		
-		// Merge partition if there are defined number of colliders
-		private static const MIN_COLLIDERS_PER_PARTITION:int = 1;
-		
-		delta_internal var instanceNum:int;
+	{		
+		private var wrapperClass:Class;
+		delta_internal var instanceNum:int;		
 		delta_internal var partitions:Vector.<Partition> = new Vector.<Partition>();
 		delta_internal var colliders:Vector.<Mesh> = new Vector.<Mesh>();	
 		delta_internal var isSplit:Boolean = false;
@@ -51,7 +46,18 @@ package net.akimirksnis.delta.game.collisions
 		/**
 		 * Class constructor.
 		 */
-		public function Partition(minX:Number, minY:Number, minZ:Number, maxX:Number, maxY:Number, maxZ:Number, collidersAndPartitions:Dictionary, instanceNum:int, parent:Partition = null)
+		public function Partition(
+			minX:Number,
+			minY:Number, 
+			minZ:Number, 
+			maxX:Number, 
+			maxY:Number, 
+			maxZ:Number, 
+			parent:Partition,
+			collidersAndPartitions:Dictionary, 
+			instanceNum:int,
+			wrapperClass:Class
+			)
 		{			
 			this.minX = minX;
 			this.minY = minY;
@@ -66,6 +72,7 @@ package net.akimirksnis.delta.game.collisions
 			this.collidersAndPartitions = collidersAndPartitions;			
 			this.parent = parent;
 			this.instanceNum = instanceNum;
+			this.wrapperClass = wrapperClass;
 			
 			if(Globals.DEBUG_MODE && parent != null)
 			{
@@ -78,17 +85,60 @@ package net.akimirksnis.delta.game.collisions
 		---------------------------*/
 		
 		/**
+		 * Returns a list of potential colliders.
+		 * 
+		 * @param source An Object3D whuch will be used to calculate nearby colliders.
+		 * @return A list of potential colliders.
+		 */
+		delta_internal function getPotentialColliders(source:Mesh):Vector.<Object3D>
+		{
+			var result:Vector.<Object3D> = new Vector.<Object3D>();
+			var fitSomewhere:Boolean = false;	
+			var index:int;
+			
+			for each(var p:Partition in partitions)
+			{
+				if(p.fits(source))
+				{
+					result = result.concat(p.getPotentialColliders(source));
+					fitSomewhere = true;
+					break;
+				}
+			}
+			
+			if(fitSomewhere)
+			{
+				result = result.concat(colliders);
+			} else {
+				result = result.concat(getCollidersRecursively());
+			}
+			
+			// Filter source itself before returning final result
+			if(parent == null)
+			{
+				index = result.indexOf(source);
+				
+				if(index != -1)
+				{
+					result.splice(index, 1);
+				}
+			}
+			
+			return result;
+		}
+		
+		/**
 		 * Adds collider to the partition. Partition splits in case number
 		 * of added objects is greater than MAX_OBJECTS_PER_PARTITION constant.
 		 */
 		delta_internal function addCollider(collider:Mesh):void
-		{
+		{			
 			var addedDeeper:Boolean = false;
-			
+
 			// Check if collider fits into this partition. If don`t
 			// fit, then grow the tree until the collider is inside
 			if(parent == null && !fits(collider))
-			{	
+			{				
 				grow(collider);
 				return;
 			}			
@@ -123,7 +173,7 @@ package net.akimirksnis.delta.game.collisions
 				collidersAndPartitions[collider] = this;
 				
 				// Split partition when split limit is reached
-				if(colliders.length >= MAX_COLLIDERS_PER_PARTITION)
+				if(colliders.length >= wrapperClass.splitLimits[instanceNum])
 				{
 					split();
 				}
@@ -146,12 +196,13 @@ package net.akimirksnis.delta.game.collisions
 		 * 
 		 * @param collider Collider to remove.
 		 */
-		public function removeCollider(collider:Mesh):void
+		delta_internal function removeCollider(collider:Mesh):void
 		{
-			colliders.splice(colliders.indexOf(collider), 1);			
+			colliders.splice(colliders.indexOf(collider), 1);	
+			collidersAndPartitions[collider] = null;
 			
 			// Merge partitions if number of children is less than threshold
-			if(getChildCount() <= MIN_COLLIDERS_PER_PARTITION)
+			if(getChildCount() <= wrapperClass.mergeLimits[instanceNum])
 			{
 				merge();
 			}
@@ -167,7 +218,7 @@ package net.akimirksnis.delta.game.collisions
 		 * 
 		 * @return Octree hierarchy as string.
 		 */
-		public function getOctreeHierarchyAsString(spacer:String = ""):String
+		delta_internal function getOctreeHierarchyAsString(spacer:String = ""):String
 		{
 			var result:String = "";
 			
@@ -194,14 +245,11 @@ package net.akimirksnis.delta.game.collisions
 		{
 			// If collider do not fit into this partition anymore
 			if(!fits(collider))
-			{
-				// Save reference to root beforehand, since this partition may be disposed after unsplit
-				var root:Partition = this.root;				
-				removeCollider(collider);
-				
+			{				
+				removeCollider(collider);				
 				// Re-add collider again
-				root.addCollider(collider);				
-			} else {
+				wrapperClass.rootPartitions[instanceNum].addCollider(collider);		
+			} else {				
 				// Place collider deeper if possible
 				// Such possibility can occur if the collider has passed division line recently and
 				// has been put to the higher in the hierarchy since it didn`t fit anywhere deeper				
@@ -209,8 +257,13 @@ package net.akimirksnis.delta.game.collisions
 				{
 					if(p.fits(collider))
 					{						
-						p.addCollider(collider);
-						removeCollider(collider);
+						// Remove collider
+						// Don`t use removeCollider() here because merge could do something disasterous in this case =)
+						colliders.splice(colliders.indexOf(collider), 1);	
+						collidersAndPartitions[collider] = null;
+						
+						// Re-add collider to the partition it fits in
+						p.addCollider(collider);						
 						break;
 					}					
 				}
@@ -313,7 +366,7 @@ package net.akimirksnis.delta.game.collisions
 		 * Cleans up outer references.
 		 */
 		delta_internal function dispose():void
-		{			
+		{
 			for each(var p:Partition in partitions)
 			{
 				p.dispose();
@@ -350,25 +403,25 @@ package net.akimirksnis.delta.game.collisions
 			
 			// Up front left
 			partitions.push(
-				new Partition(minX, minY, newMiddleZ, newMiddleX, newMiddleY, maxZ, collidersAndPartitions, instanceNum, this)
+				new Partition(minX, minY, newMiddleZ, newMiddleX, newMiddleY, maxZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "up-front-left     ";
 			
 			// Up front right
 			partitions.push(
-				new Partition( newMiddleX, minY, newMiddleZ, maxX, newMiddleY, maxZ, collidersAndPartitions, instanceNum, this)
+				new Partition( newMiddleX, minY, newMiddleZ, maxX, newMiddleY, maxZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "up-front-right    ";
 			
 			// Up back left
 			partitions.push(
-				new Partition(minX, newMiddleY,	newMiddleZ,	newMiddleX,	maxY, maxZ, collidersAndPartitions, instanceNum, this)
+				new Partition(minX, newMiddleY,	newMiddleZ,	newMiddleX,	maxY, maxZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "up-back-left      ";
 			
 			// Up back right
 			partitions.push(
-				new Partition(newMiddleX, newMiddleY, newMiddleZ, maxX,	maxY, maxZ, collidersAndPartitions, instanceNum, this)
+				new Partition(newMiddleX, newMiddleY, newMiddleZ, maxX,	maxY, maxZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "up-back-right     ";
 			
@@ -376,25 +429,25 @@ package net.akimirksnis.delta.game.collisions
 			
 			// Bottom front left
 			partitions.push(
-				new Partition(minX, minY, minZ, newMiddleX,	newMiddleY, newMiddleZ, collidersAndPartitions, instanceNum, this)
+				new Partition(minX, minY, minZ, newMiddleX,	newMiddleY, newMiddleZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "bottom-front-left ";
 			
 			// Bottom front right
 			partitions.push(
-				new Partition(newMiddleX, minY,	minZ, maxX,	newMiddleY,	newMiddleZ, collidersAndPartitions, instanceNum, this)
+				new Partition(newMiddleX, minY,	minZ, maxX,	newMiddleY,	newMiddleZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "bottom-front-right";
 			
 			// Bottom back left
 			partitions.push(
-				new Partition(minX,	newMiddleY,	minZ, newMiddleX, maxY, newMiddleZ, collidersAndPartitions, instanceNum, this)
+				new Partition(minX,	newMiddleY,	minZ, newMiddleX, maxY, newMiddleZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "bottom-back-left  ";			
 			
 			// Bottom back right
 			partitions.push(
-				new Partition(newMiddleX, newMiddleY, minZ,	maxX, maxY,	newMiddleZ, collidersAndPartitions, instanceNum, this)
+				new Partition(newMiddleX, newMiddleY, minZ,	maxX, maxY,	newMiddleZ, this, collidersAndPartitions, instanceNum, wrapperClass)
 			);
 			partitions[partitions.length - 1].name = "bottom-back-right ";
 
@@ -408,6 +461,7 @@ package net.akimirksnis.delta.game.collisions
 					if(p.fits(colliders[i]))
 					{
 						p.addCollider(colliders[i]);
+						// todo:removeCollider()???
 						colliders.splice(i, 1);
 						break;
 					}
@@ -423,7 +477,7 @@ package net.akimirksnis.delta.game.collisions
 		private function merge():void
 		{
 			// Merge partitions if number of children is less than threshold
-			if(parent != null && parent.getChildCount() <= MIN_COLLIDERS_PER_PARTITION)
+			if(parent != null && parent.getChildCount() <= wrapperClass.mergeLimits[instanceNum])
 			{
 				parent.merge();
 			} else {
@@ -473,8 +527,10 @@ package net.akimirksnis.delta.game.collisions
 				rootMinX + rootEdgeLength,
 				rootMinY + rootEdgeLength,
 				rootMinZ + rootEdgeLength,
+				null,
 				collidersAndPartitions,
-				instanceNum
+				instanceNum,
+				wrapperClass
 			);
 			parent = newRoot;
 			newRoot.name = "newRoot";			
@@ -484,7 +540,7 @@ package net.akimirksnis.delta.game.collisions
 				newRoot.wireframeRoot = wireframeRoot;
 			}
 			
-			CollisionOctreeWrapper.rootPartitions[instanceNum] = newRoot;
+			wrapperClass.rootPartitions[instanceNum] = newRoot;
 			
 			newRoot.split();
 			
@@ -506,7 +562,7 @@ package net.akimirksnis.delta.game.collisions
 		 * Shrinks octree, if possible.
 		 */
 		delta_internal function shrink():void
-		{
+		{		
 			// Shrink octree if root partition contains only one partition that has children
 			if(colliders.length == 0)
 			{
@@ -528,7 +584,7 @@ package net.akimirksnis.delta.game.collisions
 					var newRoot:Partition = partitions[index];
 					
 					newRoot.parent = null;
-					CollisionOctreeWrapper.rootPartitions[instanceNum] = newRoot;					
+					wrapperClass.rootPartitions[instanceNum] = newRoot;					
 					
 					// Dispose all partitions (except the one selected as new root)
 					for(i = 0; i < partitions.length; i++)
@@ -551,7 +607,7 @@ package net.akimirksnis.delta.game.collisions
 				}
 			}
 		}
-		
+
 		/*---------------------------
 		Debug helpers
 		---------------------------*/
@@ -599,7 +655,7 @@ package net.akimirksnis.delta.game.collisions
 					new Vector3D(maxX, minY, minZ)
 				);
 				
-				wireframe = WireFrame.createLineStrip(points, 0xFFFFFF, 1, 1);
+				wireframe = WireFrame.createLineStrip(points, wrapperClass.wireframeColors[instanceNum], 1, 1);
 				Renderer3D.instance.uploadResources(wireframe.getResources());
 				wireframeRoot.addChild(wireframe);
 			}			
@@ -608,22 +664,6 @@ package net.akimirksnis.delta.game.collisions
 		/*---------------------------
 		Getters/setters
 		---------------------------*/
-		
-		/**
-		 * Root partition of the octree.
-		 */
-		public function get root():Partition
-		{
-			var currentPartition:Partition = this;
-			
-			// Go up the hierarchy until we find root partition
-			while(currentPartition.parent != null)
-			{
-				currentPartition = currentPartition.parent;
-			}
-			
-			return currentPartition;
-		}
 		
 		/**
 		 * Returns string representation of this object.

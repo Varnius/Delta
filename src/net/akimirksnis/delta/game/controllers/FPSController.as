@@ -11,7 +11,7 @@ package net.akimirksnis.delta.game.controllers
 	import flash.events.MouseEvent;
 	import flash.geom.Vector3D;
 	
-	import net.akimirksnis.delta.game.collisions.CollisionOctreeWrapper;
+	import net.akimirksnis.delta.game.collisions.CollisionOctree;
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
 	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.entities.units.Unit;

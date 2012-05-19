@@ -38,7 +38,7 @@ package net.akimirksnis.delta.game.entities.units
 			---------------------------*/
 			
 			// Set type of the entity
-			_type = EntityType.UNIT_WALKER2;
+			_type = EntityType.UNIT_WALKER2;			
 			
 			// Set entity model
 			setupModel(Library.instance.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);

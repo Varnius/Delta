@@ -1,16 +1,18 @@
 package net.akimirksnis.delta.game.core
 {
+	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
+	import alternativa.engine3d.primitives.Box;
 	
 	import flash.events.Event;
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 	
-	import net.akimirksnis.delta.game.collisions.CollisionOctreeWrapper;
+	import net.akimirksnis.delta.game.collisions.CollisionOctree;
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
@@ -31,10 +33,10 @@ package net.akimirksnis.delta.game.core
 		private var zeroVector:Vector3D = new Vector3D();
 		
 		// Used for terrain and other stationary objects (entities)
-		private var _staticCollisionOctree:CollisionOctreeWrapper;
+		private var _staticCollisionOctree:CollisionOctree;
 		
 		// Used for moving entities
-		private var _dynamicCollisionOctree:CollisionOctreeWrapper;	
+		private var _dynamicCollisionOctree:CollisionOctree;	
 		private var _dynamicEntities:Vector.<Entity> = new Vector.<Entity>();
 		
 		
@@ -67,7 +69,7 @@ package net.akimirksnis.delta.game.core
 		/*---------------------------
 		Public methods
 		---------------------------*/	
-
+		
 		/**
 		 * Prepares map for use.
 		 */
@@ -75,44 +77,80 @@ package net.akimirksnis.delta.game.core
 		{
 			_currentMap = this;
 			
-			// Add all root level objects
+			// Add all root level objects except collision mesh
 			for each(var o:Object3D in _rootLevelObjects)
 			{
-				addChild(o);
+				if(o.name != COLLISION_MESH_NAME)
+				{
+					addChild(o);
+				}
 			}
 			
+			// Generate wireframe root
+			if(Globals.DEBUG_MODE)
+			{
+				_wireframeRoot = new Object3D();
+				_wireframeRoot.name = "wireframe-root";
+				addChild(_wireframeRoot);
+			}
+			
+			/*---------------------------
+			Handle terrain mesh
+			---------------------------*/
+			
 			_terrainMesh = Mesh(getObjectByName(TERRAIN_MESH_NAME));
-			_collisionMesh = Mesh(getObjectByName(COLLISION_MESH_NAME));
+			
+			/*---------------------------
+			Handle collision mesh
+			---------------------------*/
+			
+			// Use dummy box as collision mesh root
+			_collisionMesh = new Box(1, 1, 1, 1, 1, 1);
+			
+			// Create an octree (from collision hierachy) for static colliders
+			_staticCollisionOctree = new CollisionOctree(Mesh(getObjectByName(COLLISION_MESH_NAME)), 5, 5);
+			_staticCollisionOctree.wireframeVisible = false;
+			
+			// Flatten collision mesh hierachy and add to the root
+			var flattenedCollisionMesh:Vector.<Mesh> = Utils.getFlattenedMeshHierachy(Mesh(getObjectByName(COLLISION_MESH_NAME)));
+			var global:Vector3D;
+			
+			// Assign global coords to every collision mesh
+			for each(var m:Mesh in flattenedCollisionMesh)
+			{
+				global = m.localToGlobal(Utils.ZERO_VECTOR);				
+				_collisionMesh.addChild(m);
+				m.x = global.x;
+				m.y = global.y;
+				m.z = global.z;
+			}
+			
+			// Add all collision mesh colliders
+			for(var i:int; i < _collisionMesh.numChildren; i++)
+			{
+				_staticCollisionOctree.addCollider(Mesh(_collisionMesh.getChildAt(i)));
+			}
 			
 			// Hide collision mesh
-			// todo: still shows up somehow
 			_collisionMesh.visible = false;
 			
-			// Use terrain mesh for collisions if collision mesh is unavailable
-			if(_collisionMesh == null)
-			{
-				_collisionMesh = _terrainMesh;
-			}	
+			/*---------------------------
+			Handle dynamic octree
+			---------------------------*/
+			
+			// Setup dynamic collision octree
+			_dynamicCollisionOctree = new CollisionOctree(null, 3, 2);
+			Core.instance.addLoopCallbackPost(updateDynamicCollisionOctree);			
+			
+			/*---------------------------
+			Debug
+			---------------------------*/
 			
 			if(Globals.DEBUG_MODE)
 			{
 				generateWireframes();
 			}
 			
-			// Create an octree (from collision mesh) for static colliders
-			_staticCollisionOctree = new CollisionOctreeWrapper(_collisionMesh);
-			_staticCollisionOctree.wireframeVisible = false;
-			
-			// Add all collision mesh colliders
-			for each(var m:Mesh in Utils.getMeshHierachyAsVector(_collisionMesh))
-			{
-				_staticCollisionOctree.addCollider(m);
-			}		
-			
-			// Setup dynamic collision octree
-			_dynamicCollisionOctree = new CollisionOctreeWrapper();
-			Core.instance.addLoopCallbackPost(updateDynamicCollisionOctree);
-						
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
 		
@@ -140,7 +178,7 @@ package net.akimirksnis.delta.game.core
 		 * @param marker Optional marker name for setting position of an entity.
 		 * @param dynamic Marks whether entity is static or dynamic.
 		 */
-		public function addEntity(entity:Entity, markerName:String = "", dynamic:Boolean = false):void
+		public function addEntity(entity:Entity, markerName:String = ""):void
 		{
 			trace("[GameMap] > Adding entity: " + entity);
 			
@@ -168,15 +206,15 @@ package net.akimirksnis.delta.game.core
 			// Add entity as collider in the collision octree
 			if(!entity.excludeFromCollisions)
 			{
-				if(dynamic)				
+				if(entity.dynamicCollider)				
 				{
-					_dynamicCollisionOctree.addCollider(entity.collisionMesh);
 					_dynamicEntities.push(entity);
+					_dynamicCollisionOctree.addCollider(entity.collisionMesh);					
 				} else {
 					_staticCollisionOctree.addCollider(entity.collisionMesh);
 				}
 			}
-						
+			
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
 		
@@ -187,24 +225,37 @@ package net.akimirksnis.delta.game.core
 		 */
 		public function removeEntity(entity:Entity):void
 		{
-			var index:int = -1;
+			var i:int;
 			
-			for each(var e:Entity in entities)
+			for(i = 0; i < entities.length; i++)
 			{
-				if(e == entity)
+				if(entities[i] == entity)
 				{
-					index = entities.indexOf(e);
+					entities.splice(i, 1);
 				}
 			}
 			
-			if(index != -1)
+			// Remove entity from collision octree
+			if(!entity.excludeFromCollisions)
 			{
-				entities.splice(index, 1);
-			} else {
-				trace("[GameCore] Entity to remove not found.");
-			}
+				if(entity.dynamicCollider)
+				{
+					for(i = 0; i < _dynamicEntities.length; i++)
+					{
+						if(_dynamicEntities[i] == entity)
+						{
+							_dynamicEntities.splice(i, 1);
+							_dynamicCollisionOctree.removeCollider(entity.m);
+							break;
+						}
+					}
+				} else {
+					_staticCollisionOctree.removeCollider(entity.m);
+				}
+			}			
 			
-			entity.dispose();
+			entity.dispose();			
+			
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}
 		
@@ -244,20 +295,15 @@ package net.akimirksnis.delta.game.core
 		/*---------------------------
 		Debug helpers
 		---------------------------*/		
-
+		
 		/**
 		 * Generates wireframes for map meshes.
 		 */
 		private function generateWireframes():void
 		{				
 			var color:uint;		
-			var w:WireFrame;
+			var w:WireFrame;		
 			
-			_wireframeRoot = new Object3D();
-			
-			// Create root element as parent element for wireframes
-			_wireframeRoot.name = "wireframe-root";
-			addChild(_wireframeRoot);
 			_genericWireframes = new Object3D;
 			_genericWireframes.visible = false;
 			_wireframeRoot.addChild(_genericWireframes);			
@@ -401,7 +447,7 @@ package net.akimirksnis.delta.game.core
 		{
 			return Utils.getColoredHierarchyAsHTMLString(this);
 		}
-
+		
 		/**
 		 * All wireframes are children of this root object.
 		 */
@@ -413,7 +459,7 @@ package net.akimirksnis.delta.game.core
 		/**
 		 * Octree of static colliders.
 		 */
-		public function get staticCollisionOctree():CollisionOctreeWrapper
+		public function get staticCollisionOctree():CollisionOctree
 		{
 			return _staticCollisionOctree;
 		}
@@ -421,7 +467,7 @@ package net.akimirksnis.delta.game.core
 		/**
 		 * Octree of dynamic colliders.
 		 */
-		public function get dynamicCollisionOctree():CollisionOctreeWrapper
+		public function get dynamicCollisionOctree():CollisionOctree
 		{
 			return _dynamicCollisionOctree;
 		}
