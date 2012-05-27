@@ -44,7 +44,7 @@ package net.akimirksnis.delta.game.entities.units
 			setupModel(Library.instance.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);
 			
 			// Set unique name
-			_namex = type + _count;
+			_name = type + _count;
 			
 			// Prepare animations [Unit + Entity]
 			setupAnimations();
@@ -75,11 +75,11 @@ package net.akimirksnis.delta.game.entities.units
 			
 			for each(var w:Weapon in _weapons)
 			{
-				Utils.getDescendantByName(this.m, "Base_HumanRPalm").addChild(w.m);
-				w.m.visible = false;				
+				Utils.getDescendantByName(this.mesh, "Base_HumanRPalm").addChild(w.mesh);
+				w.mesh.visible = false;				
 			}
 			
-			_currentWeapon.m.visible = true;
+			_currentWeapon.mesh.visible = true;
 			
 			/*---------------------------
 			Other

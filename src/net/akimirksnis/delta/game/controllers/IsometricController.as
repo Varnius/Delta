@@ -1,33 +1,8 @@
 package net.akimirksnis.delta.game.controllers
 {
-	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.core.Camera3D;
-	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.core.RayIntersectionData;
-	import alternativa.engine3d.core.Resource;
-	import alternativa.engine3d.core.View;
-	import alternativa.engine3d.core.events.MouseEvent3D;
-	import alternativa.engine3d.materials.FillMaterial;
-	import alternativa.engine3d.objects.Mesh;
-	import alternativa.engine3d.objects.Skin;
 	import alternativa.engine3d.objects.WireFrame;
-	import alternativa.engine3d.primitives.Box;
-	import alternativa.engine3d.resources.Geometry;
-	
-	import com.bit101.components.Component;
-	import com.bit101.components.Label;
-	import com.bit101.components.List;
-	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.utils.Segment;
-	import net.akimirksnis.delta.game.utils.Utils;
-	import net.akimirksnis.delta.game.cameras.IsometricCamera;
-	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
-	import net.akimirksnis.delta.game.controllers.interfaces.IController;
-	import net.akimirksnis.delta.game.core.Core;
-	import net.akimirksnis.delta.game.entities.AnimationType;
-	import net.akimirksnis.delta.game.entities.units.Unit;
-	import net.akimirksnis.delta.game.entities.events.EntityMouseEvent3D;
 	
 	import flash.display.InteractiveObject;
 	import flash.display.Sprite;
@@ -38,6 +13,12 @@ package net.akimirksnis.delta.game.controllers
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import flash.ui.Mouse;
+	
+	import net.akimirksnis.delta.game.cameras.IsometricCamera;
+	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
+	import net.akimirksnis.delta.game.entities.units.Unit;
+	import net.akimirksnis.delta.game.utils.Globals;
+	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class IsometricController implements ICameraController
 	{	
@@ -117,12 +98,10 @@ package net.akimirksnis.delta.game.controllers
 		public function think():void
 		{
 			if(_enabled)
-			{
-								
-					handleKeyboardInput();			
-					handleCameraPosition();
-					handleMouseInput();
-				
+			{							
+				handleKeyboardInput();			
+				handleCameraPosition();
+				handleMouseInput();				
 			}
 		}
 		
@@ -209,13 +188,13 @@ package net.akimirksnis.delta.game.controllers
 			var y:Number, x:Number;
 			x = mx - middlePoint.x;
 			y = my - middlePoint.y;			
-			_unit.m.rotationZ = -Math.atan2(y, x) + Utils.degToRad(90);
+			_unit.mesh.rotationZ = -Math.atan2(y, x) + Utils.degToRad(90);
 			
 			gameCursor.x = mx;
 			gameCursor.y = my;
 			
 			// Handle cursor rotation
-			gameCursor.rotation = -Utils.radToDeg(_unit.m.rotationZ) + 180;			
+			gameCursor.rotation = -Utils.radToDeg(_unit.mesh.rotationZ) + 180;			
 			
 			// Inform unit about mouse key presses
 			if(mouseLeftDown)
@@ -271,9 +250,9 @@ package net.akimirksnis.delta.game.controllers
 		 */
 		private function handleCameraPosition():void
 		{		
-			_camera.x = unit.m.x - areaLength * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationY));
-			_camera.y = unit.m.y - areaWidth * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationX)); 
-			_camera.z = IsometricCamera.POSITION_Z + _unit.m.z;
+			_camera.x = unit.mesh.x - areaLength * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationY));
+			_camera.y = unit.mesh.y - areaWidth * Math.sin(Utils.degToRad(180) - Math.abs(_camera.rotationX)); 
+			_camera.z = IsometricCamera.POSITION_Z + _unit.mesh.z;
 		}
 		
 		/*---------------------------

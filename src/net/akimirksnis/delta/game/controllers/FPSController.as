@@ -11,9 +11,7 @@ package net.akimirksnis.delta.game.controllers
 	import flash.events.MouseEvent;
 	import flash.geom.Vector3D;
 	
-	import net.akimirksnis.delta.game.collisions.CollisionOctree;
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
-	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
@@ -95,7 +93,13 @@ package net.akimirksnis.delta.game.controllers
 		 */
 		private function handleMouseInput():void
 		{
-			//	
+			if(mouseLeftDown)
+			{
+				_followUnit.usePrimaryFire();
+			} else if(mouseRightDown)
+			{
+				_followUnit.useSecondaryFire();	
+			}
 		}
 		
 		/**
@@ -157,9 +161,9 @@ package net.akimirksnis.delta.game.controllers
 				percMovementY = mouseMovementY / Globals.stage.stageHeight;
 				
 				// Handle yaw
-				_followUnit.m.rotationZ -= Math.PI * percMovementX * mouseSensitivity;				
-				_followUnit.m.rotationZ = _followUnit.m.rotationZ > PI2 ? _followUnit.m.rotationZ - PI2 : _followUnit.m.rotationZ;
-				_followUnit.m.rotationZ = _followUnit.m.rotationZ < -PI2 ? _followUnit.m.rotationZ + PI2 : _followUnit.m.rotationZ;
+				_followUnit.mesh.rotationZ -= Math.PI * percMovementX * mouseSensitivity;				
+				_followUnit.mesh.rotationZ = _followUnit.mesh.rotationZ > PI2 ? _followUnit.mesh.rotationZ - PI2 : _followUnit.mesh.rotationZ;
+				_followUnit.mesh.rotationZ = _followUnit.mesh.rotationZ < -PI2 ? _followUnit.mesh.rotationZ + PI2 : _followUnit.mesh.rotationZ;
 				
 				// Handle pitch
 				if(_camera.rotationX <= MAX_PITCH &&_camera.rotationX >= MIN_PITCH)
@@ -216,6 +220,7 @@ package net.akimirksnis.delta.game.controllers
 		{
 			// Key: 'o'
 			// Enter fullscreen mode
+			// todo: move to gui controller
 			if(currentlyPressedKeys[79])
 			{
 				if(Globals.stage.displayState == StageDisplayState.NORMAL)
@@ -415,9 +420,9 @@ package net.akimirksnis.delta.game.controllers
 			if(value != null)
 			{
 				_followUnit = value;
-				_followUnit.m.addChild(_camera);
+				_followUnit.mesh.addChild(_camera);
 				//_camera.z += _followUnit.m.boundBox.maxZ * 0.95;
-				_camera.z += _followUnit.m.boundBox.maxZ * 1.25;
+				_camera.z += _followUnit.mesh.boundBox.maxZ * 1.25;
 				//_followUnit.m.visible = false;
 				
 				// todo

@@ -1,6 +1,5 @@
 package net.akimirksnis.delta.game.core
 {
-	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.lights.*;
 	import alternativa.engine3d.materials.TextureMaterial;
 	import alternativa.engine3d.objects.SkyBox;
@@ -214,24 +213,14 @@ package net.akimirksnis.delta.game.core
 			renderer.addObject3D(sb);
 			
 			
-			// CHARACTER			
-			//renderer.mainContainer.calculateBoundBox();
+			// CHARACTER
 			
 			_unit = new Walker2();
 			map.addEntity(_unit, "marker-spawn1");
 			_units.push(_unit);			
 			ctents.push(_unit);
 			
-			map.addEntity(new Walker2, "marker-spawn1");
-			
-			
-			
-			/*var statice:Teapot = new Teapot();
-			library.map.addChild(statice.model);
-			statice.model.x = 1000;
-			statice.model.z = 0;
-			statice.showBoundBox = true;
-			ctents.push(statice);*/
+			map.addEntity(new Walker2, "marker-spawn1");			
 			
 			// Origin marker
 			

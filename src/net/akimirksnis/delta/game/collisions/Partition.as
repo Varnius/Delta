@@ -1,5 +1,6 @@
 package net.akimirksnis.delta.game.collisions
 {
+	import alternativa.engine3d.core.CullingPlane;
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
@@ -31,6 +32,9 @@ package net.akimirksnis.delta.game.collisions
 		delta_internal var maxY:Number;
 		delta_internal var maxZ:Number;
 		
+		private var p:Vector3D = new Vector3D();
+		private var n:Vector3D = new Vector3D();
+		private var planeNormal:Vector3D = new Vector3D();		
 		private var edgeLength:Number;		
 		private var newMiddleX:Number;
 		private var newMiddleY:Number;
@@ -122,6 +126,99 @@ package net.akimirksnis.delta.game.collisions
 				{
 					result.splice(index, 1);
 				}
+			}
+			
+			return result;
+		}	
+		
+		/**
+		 * Returns all colliders that are inside camera frustum.
+		 * 
+		 * @param cullingPlane Camera frustum start plane.
+		 * @return All colliders that reside in camera frustum.
+		 */
+		delta_internal function getCollidersByFrustum(frustum:CullingPlane):Vector.<Object3D>
+		{
+			var result:Vector.<Object3D> = new Vector.<Object3D>();
+			var currentPlane:CullingPlane = frustum;			
+			var distanceP:Number;
+			var distanceN:Number;
+			
+			// 0 - inside frustum, 1 - intersects frustum, 2 - outside frustum
+			var res:int = 0;
+			
+			// Check if current partition is inside the camera frustum
+			while(currentPlane != null)
+			{
+				// Set plane normal
+				planeNormal.setTo(currentPlane.x, currentPlane.y, currentPlane.z);
+				
+				// xyz and offset are not normalized but works :^
+				//planeNormal.normalize();
+				
+				p.setTo(minX, minY, minZ);
+				n.setTo(maxX, maxY, maxZ);
+				
+				if(planeNormal.x >= 0)
+				{
+					p.x = maxX;
+					n.x = minX;
+				}
+				
+				if(planeNormal.y >= 0)
+				{
+					p.y = maxY;
+					n.y = minY;
+				}
+				
+				if(planeNormal.z >= 0)
+				{
+					p.z = maxZ;
+					n.z = minZ;
+				}	
+				
+				// Offset is negative in A3D, therefore add minus
+				distanceP = -currentPlane.offset + planeNormal.dotProduct(p);
+				distanceN = -currentPlane.offset + planeNormal.dotProduct(n);				
+				
+				// If box is outside current plane then it is outside of frustum
+				if(distanceP < 0 && distanceN < 0)
+				{
+					res = 2;
+					break;
+				
+				// If both points are in different sides of a plane
+				} else if( !(distanceP >= 0 && distanceN >= 0) )
+				{
+					res = 1;
+				}				
+				
+				// Move on to the next plane
+				currentPlane = currentPlane.next;
+			}
+			
+			//trace('result:', res, isSplit);
+			
+			// If this partition fully fits
+			if(res == 0)
+			{
+				result = result.concat(getCollidersRecursively());
+					
+					
+			// If this partition fits only partially and has child partitions
+			} else if (res == 1 && isSplit)
+			{
+				result = result.concat(colliders);
+				
+				for each(var p:Partition in partitions)
+				{
+					result = result.concat(p.getCollidersByFrustum(frustum));
+				}
+					
+			// If this partition fits only partially and no children
+			} else if (res == 1 && !isSplit)
+			{
+				result = result.concat(colliders);
 			}
 			
 			return result;

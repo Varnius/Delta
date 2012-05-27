@@ -17,7 +17,7 @@ package net.akimirksnis.delta.game.entities
 		//Properties of an entity
 		
 		// Model mesh/skin used within the entity
-		protected var _model:Mesh;
+		protected var _mesh:Mesh;
 		
 		// Geometry used for collisions
 		protected var _collisionMesh:Mesh;
@@ -28,8 +28,7 @@ package net.akimirksnis.delta.game.entities
 		protected var _type:String = EntityType.ENTITY_UNDEFINED;
 		
 		// Entity unique name with unique number at the end, like unit_walker1, unit_walker2 etc
-		protected var _namex:String = "default_entity_name";	
-		
+		protected var _name:String = "default_entity_name";
 		//Animation properties		
 		protected var aniController:AnimationController;
 		protected var aniSwitcher:AnimationSwitcher;
@@ -53,11 +52,11 @@ package net.akimirksnis.delta.game.entities
 
 		protected function setupModel(model:Mesh):void
 		{
-			_model = model;
+			_mesh = model;
 			
 			if(Globals.DEBUG_MODE)
 			{
-				var boundBox:BoundBox = this.m.boundBox;
+				var boundBox:BoundBox = this.mesh.boundBox;
 				var points:Vector.<Vector3D> = new Vector.<Vector3D>();
 				points.push(
 					new Vector3D(boundBox.minX, boundBox.minY, boundBox.minZ),
@@ -83,7 +82,7 @@ package net.akimirksnis.delta.game.entities
 				_boundBoxWireframe = WireFrame.createLineStrip(points, 0xFFFFFF, 1, 1);
 				_boundBoxWireframe.visible = false;
 				Globals.renderer.uploadResources(_boundBoxWireframe.getResources());
-				this.m.addChild(_boundBoxWireframe);
+				this.mesh.addChild(_boundBoxWireframe);
 			}
 		}
 		
@@ -108,21 +107,21 @@ package net.akimirksnis.delta.game.entities
 		
 		public override function toString():String
 		{
-			return _namex;
+			return _name;
 		}
 		
 		/*---------------------------
 		Getters/setters
 		---------------------------*/
 		
-		public function get m():Mesh
+		public function get mesh():Mesh
 		{
-			return _model;
+			return _mesh;
 		}
 		
 		public function get collisionMesh():Mesh
 		{
-			return _collisionMesh != null ? _collisionMesh : _model;
+			return _collisionMesh != null ? _collisionMesh : _mesh;
 		}
 		
 		public function get excludeFromCollisions():Boolean
@@ -137,12 +136,12 @@ package net.akimirksnis.delta.game.entities
 		
 		public function get name():String
 		{
-			return _namex;
+			return _name;
 		}
 		
 		public function get position():Vector3D
 		{
-			return new Vector3D(m.x, m.y, m.z);
+			return new Vector3D(mesh.x, mesh.y, mesh.z);
 		}
 		
 		public function get showBoundBox():Boolean
@@ -162,7 +161,7 @@ package net.akimirksnis.delta.game.entities
 		public function dispose():void
 		{			
 			// Nullify model reference
-			_model = null;
+			_mesh = null;
 		}
 
 		public function get dynamicCollider():Boolean

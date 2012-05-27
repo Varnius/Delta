@@ -1,6 +1,8 @@
 package net.akimirksnis.delta.game.collisions
 {
+	import alternativa.engine3d.alternativa3d;
 	import alternativa.engine3d.core.BoundBox;
+	import alternativa.engine3d.core.CullingPlane;
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.objects.Mesh;
 	
@@ -8,11 +10,13 @@ package net.akimirksnis.delta.game.collisions
 	import flash.utils.Dictionary;
 	
 	import net.akimirksnis.delta.delta_internal;
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	use namespace delta_internal;
+	use namespace alternativa3d;
 
 	/**
 	 * Collision octree wrapper. Includes some performance optimisations and should be used instead of raw octree.
@@ -137,7 +141,7 @@ package net.akimirksnis.delta.game.collisions
 		}
 		
 		/**
-		 * Returns a list of potential colliders.
+		 * Returns a list of potential colliders (filtered by bounding box position of the source).
 		 * 
 		 * @param source An Object3D which will be used to calculate nearby colliders.
 		 * @return A list of potential colliders.
@@ -145,6 +149,17 @@ package net.akimirksnis.delta.game.collisions
 		public function getPotentialColliders(source:Mesh):Vector.<Object3D>
 		{
 			return rootPartitions[instanceNum].getPotentialColliders(source);
+		}
+		
+		/**
+		 * Returns a list of potential colliders (filtered by camera frustum).
+		 * 
+		 * @param frustum Camera frustum start plane.
+		 * @return A list of potential colliders.
+		 */
+		public function getCollidersByFrustum(frustum:CullingPlane):Vector.<Object3D>
+		{
+			return rootPartitions[instanceNum].getCollidersByFrustum(frustum);
 		}
 		
 		/*---------------------------

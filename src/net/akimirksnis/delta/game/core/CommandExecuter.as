@@ -6,9 +6,8 @@ package net.akimirksnis.delta.game.core
 	
 	import flash.events.Event;
 	
-	import net.akimirksnis.delta.game.collisions.CollisionOctree;
-	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.delta_internal;
+	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	use namespace delta_internal;

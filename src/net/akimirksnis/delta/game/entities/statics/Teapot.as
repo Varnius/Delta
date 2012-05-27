@@ -41,7 +41,7 @@ package net.akimirksnis.delta.game.entities.statics
 			setupModel(Library.instance.getObjectByName(EntityType.STATIC_TEAPOT).clone() as Mesh);
 			
 			// Set unique name
-			_namex = type + _count;
+			_name = type + _count;
 			
 			// Prepare animations [Unit + Entity]
 			setupAnimations();

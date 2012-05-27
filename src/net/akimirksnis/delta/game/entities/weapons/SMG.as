@@ -37,11 +37,11 @@ package net.akimirksnis.delta.game.entities.weapons
 			_type = EntityType.WEAPON_SMG;			
 			// Set entity model
 			//_model = Globals.core.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh;
-			_model = new Box(15, 15, 15, 1, 1, 1, false, new FillMaterial(0x00FF00, 0.9));
-			Globals.renderer.uploadResources(_model.getResources());
+			_mesh = new Box(15, 15, 15, 1, 1, 1, false, new FillMaterial(0x00FF00, 0.9));
+			Globals.renderer.uploadResources(_mesh.getResources());
 			
 			// Set unique name
-			_namex = type + _count;
+			_name = type + _count;
 			
 			// Prepare animations [Unit + Entity]
 			setupAnimations();
@@ -50,7 +50,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			setupEventHandlers();
 			
 			// Model selectable?
-			m.mouseEnabled = false;
+			mesh.mouseEnabled = false;
 			
 			/*---------------------------
 			Calls to Weapon superclass

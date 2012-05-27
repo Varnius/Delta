@@ -1,5 +1,6 @@
 package net.akimirksnis.delta.game.core
 {	
+	import alternativa.engine3d.alternativa3d;
 	import alternativa.engine3d.core.*;
 	import alternativa.engine3d.core.events.MouseEvent3D;
 	import alternativa.engine3d.lights.*;
@@ -292,7 +293,7 @@ package net.akimirksnis.delta.game.core
 		}
 		
 		/*---------------------------
-		Helpers
+		Debug helpers
 		---------------------------*/
 		
 		private function onLightClick(e:Event):void
@@ -313,7 +314,7 @@ package net.akimirksnis.delta.game.core
 		Event handlers
 		---------------------------*/
 		
-		protected function onStageResize(e:Event):void
+		private function onStageResize(e:Event):void
 		{
 			if(_camera != null)
 			{
@@ -376,6 +377,15 @@ package net.akimirksnis.delta.game.core
 		public function get mainContainer():Object3D
 		{
 			return _mainContainer;
+		}
+		
+		/**
+		 * Camera frustum represented by the list of 6 planes.
+		 */
+		public function get frustum():CullingPlane
+		{
+			use namespace alternativa3d;
+			return _camera.frustum;
 		}
 	}
 }

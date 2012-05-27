@@ -132,7 +132,7 @@ package net.akimirksnis.delta.game.entities.units
 			var animationFrames:String = Library.instance.getPropertiesByName(super.type)["animations"];
 			var timeBounds:Vector.<Number> = new Vector.<Number>();
 			
-			animation.attach(m, true);
+			animation.attach(mesh, true);
 			
 			if(animationFrames != null || animationFrames != "")
 			{
@@ -180,11 +180,11 @@ package net.akimirksnis.delta.game.entities.units
 			{
 				var rutul:GeoSphere = new GeoSphere(1,10,false,new FillMaterial(0xAAFF00, 0.4));
 				Globals.renderer.uploadResources(rutul.getResources());
-				this.m.addChild(rutul);
+				this.mesh.addChild(rutul);
 				rutul.scaleX = collider.radiusX;
 				rutul.scaleY = collider.radiusY;
 				rutul.scaleZ = collider.radiusZ;
-				rutul.z = this.m.boundBox.maxZ / 2;
+				rutul.z = this.mesh.boundBox.maxZ / 2;
 			}
 		}
 		
@@ -269,8 +269,8 @@ package net.akimirksnis.delta.game.entities.units
 			----------------------*/
 			
 			// Calculate forward vector from unit rotation
-			forward.x = Math.cos(m.rotationZ - Utils.HALF_PI);
-			forward.y = Math.sin(m.rotationZ - Utils.HALF_PI);
+			forward.x = Math.cos(mesh.rotationZ - Utils.HALF_PI);
+			forward.y = Math.sin(mesh.rotationZ - Utils.HALF_PI);
 			forward.z = 0;
 			
 			// Calculate right vector from cross product of forward and up vectors
@@ -385,7 +385,7 @@ package net.akimirksnis.delta.game.entities.units
 			//trace(potentialColliders);
 			
 			// Set current ellipsoid position
-			source.setTo(m.x, m.y, m.z + this.m.boundBox.maxZ / 2);
+			source.setTo(mesh.x, mesh.y, mesh.z + this.mesh.boundBox.maxZ / 2);
 			
 			// Check for surface under the character				
 			onGround = collider.getCollision2(
@@ -432,9 +432,9 @@ package net.akimirksnis.delta.game.entities.units
 			);			
 			
 			// Set new coordinates of this unit
-			m.x = destination.x;
-			m.y = destination.y;
-			m.z = destination.z - this.m.boundBox.maxZ / 2;
+			mesh.x = destination.x;
+			mesh.y = destination.y;
+			mesh.z = destination.z - this.mesh.boundBox.maxZ / 2;
 			
 			/*----------------------
 			Adjust velocity vector to allow sliding the
@@ -484,7 +484,7 @@ package net.akimirksnis.delta.game.entities.units
 					velocity.y = lineMeshIntersectionResult.y;
 				}
 			}
-
+			
 			// Last time is now
 			lastTime = timeNow;		
 		}
