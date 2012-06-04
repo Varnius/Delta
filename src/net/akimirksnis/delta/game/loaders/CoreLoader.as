@@ -132,7 +132,7 @@ package net.akimirksnis.delta.game.loaders
 		{
 			var result:XML;
 			
-			// todo order
+			// todo: order
 			for each(var fn:String in XMLPaths)
 			{
 				if(fn == filename)
@@ -371,25 +371,26 @@ package net.akimirksnis.delta.game.loaders
 				// Get filename without extension (since the file is in a directory of this name)
 				var mapFilenameNoExtension:String = Utils.trimExtension(rawMap.fileName);
 				
-				// Determine whether map data is binary (A3D) or text (Collada) and parse				
+				// Determine whether map data is binary (A3D) or xml (Collada) and parse				
 				if(rawMap.binary)
 				{
-					// todo:binary
-					/*mapParser.parseBinaryMap(
-						ByteArray(map.modelData),
-						map.dataFormat,
-						Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MAPS + mapMaterialsDir + "/",
-						library.animations
-					);*/
-				} else {						
+					mapParser.parseA3DMap(
+						map,
+						ByteArray(rawMap.mapData),
+						Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MAPS + mapFilenameNoExtension + "/"
+					);
+					
+				} else {
+					
 					mapParser.parseColladaMap(
 						map,
 						XML(rawMap.mapData),
 						Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MAPS + mapFilenameNoExtension + "/"
 					);					
-					map.name = mapFilenameNoExtension;
-					map.init();
 				}
+				
+				map.name = mapFilenameNoExtension;
+				map.init();
 				
 				trace("-------");
 				
@@ -413,7 +414,12 @@ package net.akimirksnis.delta.game.loaders
 		 */
 		private function onMapMaterialLoadingProgress(e:ProgressEvent):void
 		{
-			trace("[CoreLoader] > Map material", e.bytesLoaded, "of", e.bytesTotal, "loaded");
+			trace("[CoreLoader] > Map material", e.bytesLoaded, "of", e.bytesTotal, "loaded");			
+			
+			currentStep = e.bytesLoaded;
+			totalSteps = e.bytesTotal;
+			
+			updatePreloaderStep();
 		}		
 		
 		/**

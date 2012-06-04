@@ -382,8 +382,6 @@ package net.akimirksnis.delta.game.entities.units
 					GameMap.currentMap.staticCollisionOctree.getPotentialColliders(this.collisionMesh)
 				);
 			
-			//trace(potentialColliders);
-			
 			// Set current ellipsoid position
 			source.setTo(mesh.x, mesh.y, mesh.z + this.mesh.boundBox.maxZ / 2);
 			

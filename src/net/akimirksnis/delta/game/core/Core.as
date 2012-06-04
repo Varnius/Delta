@@ -1,9 +1,12 @@
 package net.akimirksnis.delta.game.core
 {
+	import alternativa.engine3d.core.Occluder;
 	import alternativa.engine3d.lights.*;
+	import alternativa.engine3d.materials.FillMaterial;
 	import alternativa.engine3d.materials.TextureMaterial;
 	import alternativa.engine3d.objects.SkyBox;
 	import alternativa.engine3d.objects.WireFrame;
+	import alternativa.engine3d.primitives.Plane;
 	import alternativa.engine3d.resources.BitmapTextureResource;
 	
 	import com.bit101.components.Style;
@@ -20,6 +23,7 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.entities.units.Walker2;
+	import net.akimirksnis.delta.game.gui.GuiController;
 	import net.akimirksnis.delta.game.gui.controllers.DebugOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.LevelSelectionOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
@@ -210,8 +214,7 @@ package net.akimirksnis.delta.game.core
 			renderer.uploadResource(topres);renderer.uploadResource(bottomres);renderer.uploadResource(frontres);renderer.uploadResource(backres);renderer.uploadResource(rightres);renderer.uploadResource(leftres);				
 			sb = new SkyBox(150000,left,right,front,back,bottom,top,0.002);
 			renderer.uploadResource(sb.geometry);
-			renderer.addObject3D(sb);
-			
+			renderer.addObject3D(sb);			
 			
 			// CHARACTER
 			
@@ -220,7 +223,17 @@ package net.akimirksnis.delta.game.core
 			_units.push(_unit);			
 			ctents.push(_unit);
 			
-			map.addEntity(new Walker2, "marker-spawn1");			
+			map.addEntity(new Walker2, "marker-spawn1");	
+			
+			/*var oc:Occluder = new Occluder();
+			var ocp:Plane = new Plane(10000,10000,1,1,true,false, new FillMaterial(0xFFF000, 0.25),new FillMaterial(0xFFF000, 0.25));
+			ocp.rotationX = 3.14 / 2;
+			ocp.z = 7500;
+			renderer.addObject3D(ocp, true);
+			oc.createForm(ocp.geometry);
+			oc.z = 7500;
+			oc.rotationX = 3.14 / 2;
+			renderer.addObject3D(oc);*/
 			
 			// Origin marker
 			

@@ -1,6 +1,6 @@
 package net.akimirksnis.delta.game.gui.controllers
 {
-	import net.akimirksnis.delta.game.controllers.GuiController;
+	import net.akimirksnis.delta.game.gui.GuiController;
 	
 	/**
 	 * Base class for overlay controllers.

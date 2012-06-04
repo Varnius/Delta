@@ -14,11 +14,35 @@ package net.akimirksnis.delta.game.loaders.parsers
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	
+	import net.akimirksnis.delta.game.core.Renderer3D;
+	import net.akimirksnis.delta.game.loaders.parsers.extended.DeltaParserCollada;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class ModelParser extends EventDispatcher
 	{		
+		// test cubemap
+		[Embed(source="C:/Users/Varnius/Desktop/altex/src/environmentmaterialexample/environment/left.jpg")] private static const EmbedLeft:Class;
+		[Embed(source="C:/Users/Varnius/Desktop/altex/src/environmentmaterialexample/environment/right.jpg")] private static const EmbedRight:Class;
+		[Embed(source="C:/Users/Varnius/Desktop/altex/src/environmentmaterialexample/environment/back.jpg")] private static const EmbedBack:Class;
+		[Embed(source="C:/Users/Varnius/Desktop/altex/src/environmentmaterialexample/environment/front.jpg")] private static const EmbedFront:Class;
+		[Embed(source="C:/Users/Varnius/Desktop/altex/src/environmentmaterialexample/environment/bottom.jpg")] private static const EmbedBottom:Class;
+		[Embed(source="C:/Users/Varnius/Desktop/altex/src/environmentmaterialexample/environment/top.jpg")] private static const EmbedTop:Class;
+		
+		private static const DEFAULT_LIGHTMAP_CHANNEL:int = 1;
+		
+		// Default normal map (neutral height)
+		private static const DEFAULT_NORMAL:TextureResource = Utils.texResFromColor(0x8382ff);
+		
+		// Default specular map (no specular at all)
+		private static const DEFAULT_SPECULAR:TextureResource = Utils.texResFromColor(0x000000);
+		
+		// Default reflection map (no reflections at all)
+		private static const DEFAULT_ENVREFLECTION:TextureResource = Utils.texResFromColor(0x888888);
+		
+		// Since diffuse color may vary, save generated material by some color only once
+		private static var defaultDiffuse:Dictionary = new Dictionary();
+		
 		private var resourceLoader:ResourceLoader = new ResourceLoader();
 		private var materialsLoaded:int = 0;
 		private var materialsTotal:int = 0;
@@ -134,7 +158,6 @@ package net.akimirksnis.delta.game.loaders.parsers
 			format:String,
 			materialsPath:String,
 			animationDictionary:Dictionary
-			//propertyDictionary:Dictionary*/
 		):Vector.<Object3D>
 		{
 			var parser:Parser;
@@ -254,12 +277,22 @@ package net.akimirksnis.delta.game.loaders.parsers
 		 * Handles geometry and materials of a mesh.
 		 * 
 		 * @param mesh Mesh to parse.
-		 * @param useVertexLightMaterial Indicates the type of material to apply to the mesh - Standart or VertexLight.
+		 * @param geometryOny Parse geometry only and discard any materials.
 		 */
-		protected function parseMesh(mesh:Mesh, useVertexLightMaterial:Boolean = false, geometryOnly:Boolean = false):void
-		{			
+		protected function parseMesh(mesh:Mesh, geometryOnly:Boolean = false):void
+		{
+			// Handle default maps
+			if(!DEFAULT_NORMAL.isUploaded)
+				DEFAULT_NORMAL.upload(Globals.stage3D.context3D);		
+			
+			if(!DEFAULT_SPECULAR.isUploaded)
+				DEFAULT_SPECULAR.upload(Globals.stage3D.context3D);
+			
+			if(!DEFAULT_ENVREFLECTION.isUploaded)
+				DEFAULT_ENVREFLECTION.upload(Globals.stage3D.context3D);
+			
 			// Upload mesh geometry to context3D
-			uploadResources(mesh.getResources(false, Geometry));      
+			uploadResources(mesh.getResources(false, Geometry));   
 			
 			// Parse textures of each surface of the mesh 
 			var textures:Vector.<ExternalTextureResource> = new Vector.<ExternalTextureResource>(); 
@@ -273,87 +306,122 @@ package net.akimirksnis.delta.game.loaders.parsers
 					
 					// If one or more materials exist
 					if(parserMaterial != null)
-					{	
+					{						
 						var material:TextureMaterial;
 						
-						var diffuse:TextureResource = parserMaterial.textures["diffuse"];  
-						if(parserMaterial.textures["diffuse"] == null)
-						{
-							diffuse = Utils.texResFromColor(parserMaterial.colors.diffuse);
-							diffuse.upload(Globals.stage3D.context3D);
-							trace("[ModelParser] > No diffuse map for:", mesh.name);
-						}	
+						// Possible maps
+						var diffuse:TextureResource         = parserMaterial.textures["diffuse"];
+						var normal:TextureResource          = parserMaterial.textures["bump"];
+						var specular:TextureResource        = parserMaterial.textures["specular"];
+						var emission:TextureResource        = parserMaterial.textures["emission"];
+						var glossiness:TextureResource      = parserMaterial.textures["glossiness"];						
+						var envreflection:TextureResource   = parserMaterial.textures["reflection"];
+						var opacity:TextureResource     	= parserMaterial.textures["transparent"];
 						
-						var opacity:TextureResource  = parserMaterial.textures["opacity"];  
-						if(parserMaterial.textures["opacity"] == null)
+						/*---------------------------
+						Handle each map
+						---------------------------*/
+						
+						if(diffuse == null)
 						{
-							opacity = null;
-							//trace("[ModelParser] No opacity map for: " + mesh.name);
+							// Generate default diffuse material only once per color and save it in the dictionary
+							if(!defaultDiffuse[parserMaterial.colors.diffuse])
+							{								
+								defaultDiffuse[parserMaterial.colors.diffuse] = Utils.texResFromColor(parserMaterial.colors.diffuse);
+								(defaultDiffuse[parserMaterial.colors.diffuse] as TextureResource).upload(Globals.stage3D.context3D);
+							}
+							
+							diffuse = defaultDiffuse[parserMaterial.colors.diffuse] as TextureResource;
+							
+							trace("[ModelParser] > No diffuse map for:", mesh.name);
+						}					
+						 
+						if(normal == null)
+						{
+							// Make normal from default (zero height) color
+							normal = DEFAULT_NORMAL;
+						}						
+						 
+						if(specular == null)
+						{							
+							specular = DEFAULT_SPECULAR;						
 						}
 						
-						// Only diffuse and opacity for VertexLight materials
-						if(!useVertexLightMaterial)
+						if(emission == null)
+						{							
+							//
+						}						
+						
+						if(glossiness == null)
 						{
-							var normal:TextureResource = parserMaterial.textures["bump"];  
-							if(parserMaterial.textures["bump"] == null)
-							{
-								// Make normal from default (zero height) color
-								normal = Utils.texResFromColor(0x8382ff);
-								normal.upload(Globals.stage3D.context3D);
-							}
+							//
+						}
+						  
+						if(envreflection == null)
+						{
+							envreflection = DEFAULT_ENVREFLECTION;
+						}						
+						  
+						if(opacity == null)
+						{
+							//
+						}	
+						
+						/*---------------------------
+						Determine material type
+						---------------------------*/
+						
+						if(emission != null)
+						{
+							material = new EnvironmentMaterial(diffuse, null, normal, envreflection, emission, opacity);
+							(material as EnvironmentMaterial).lightMapChannel = 1;
+							(material as EnvironmentMaterial).environmentMap = new BitmapCubeTextureResource(new EmbedLeft().bitmapData, new EmbedRight().bitmapData, new EmbedBack().bitmapData, new EmbedFront().bitmapData, new EmbedBottom().bitmapData, new EmbedTop().bitmapData);   
+							Renderer3D.instance.uploadResource((material as EnvironmentMaterial).environmentMap);
 							
-							var specular:TextureResource = parserMaterial.textures["specular"];  
-							if(parserMaterial.textures["specular"] == null)
-							{							
-								specular = Utils.texResFromColor(parserMaterial.colors.specular);
-								specular.upload(Globals.stage3D.context3D);
-							}
-							
-							var glossiness:TextureResource = parserMaterial.textures["glossiness"];  
-							if(parserMaterial.textures["glossiness"] == null)
-							{
-								glossiness = null;
-							}
+						} else {
 							
 							// Standart material with diffuse/bump/specular/glossiness/opacity maps and per-pixel lighting computation
 							material = new StandardMaterial(diffuse, normal, specular, glossiness, opacity);
+							
 							// Use tangent space for normals
 							(material as StandardMaterial).normalMapSpace = NormalMapSpace.TANGENT_RIGHT_HANDED;
-						} else {
-							// Efficient VertexLight material with diffuse/opacity maps only and per-vertex lighting computation
-							material = new VertexLightTextureMaterial(diffuse, opacity, parserMaterial.transparency);
 						}
 						
-						// Push to load queue if textures are external files					
-						if(parserMaterial.textures["diffuse"] is ExternalTextureResource)  
-							textures.push(parserMaterial.textures["diffuse"]);  
+						/*---------------------------
+						Push external textures to 
+						the load queue
+						---------------------------*/
 						
-						if(parserMaterial.textures["opacity"] is ExternalTextureResource)                      
-							textures.push(parserMaterial.textures["opacity"]);
+						if(diffuse is ExternalTextureResource) 
+							textures.push(diffuse);
 						
-						if(!useVertexLightMaterial)
-						{					
-							if(parserMaterial.textures["bump"] is ExternalTextureResource)                          
-								textures.push(parserMaterial.textures["bump"]);                         
-							
-							if(parserMaterial.textures["specular"] is ExternalTextureResource)                      
-								textures.push(parserMaterial.textures["specular"]);  
-							
-							if(parserMaterial.textures["glossiness"] is ExternalTextureResource)                          
-								textures.push(parserMaterial.textures["glossiness"]);                         
-						}					
+						if(normal is ExternalTextureResource)     
+							textures.push(normal);
+						
+						if(specular is ExternalTextureResource)   
+							textures.push(specular);
+						
+						if(emission is ExternalTextureResource)        
+							textures.push(emission); 
+						
+						if(glossiness is ExternalTextureResource)        
+							textures.push(glossiness); 
+						
+						if(envreflection is ExternalTextureResource)        
+							textures.push(envreflection); 
+						
+						if(opacity is ExternalTextureResource)
+							textures.push(opacity);
 						
 						// Apply material to mesh 
-						surface.material = material;						
-					} else {  
-						//throw new Error("No materials found for: " + mesh.name);
+						surface.material = material;
+					} else {
 						trace("[ModelParser] > No materials found for: " + mesh.name);
 					}  
 				}
 				
-				// Load materials to VGA
 				addToLoadingQueue(textures);
-			}			
+			}
 		}
 		
 		/**

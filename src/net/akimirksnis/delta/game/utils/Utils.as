@@ -68,9 +68,10 @@ package net.akimirksnis.delta.game.utils
 		 */
 		public static function texResFromColor(color:uint):TextureResource
 		{
-			var bd:BitmapData = new BitmapData(512,512, false, color);    
+			var bd:BitmapData = new BitmapData(64, 64, false, color);    
 			var bitmap:Bitmap = new Bitmap(bd, "always", true);     
-			var texture:BitmapTextureResource = new BitmapTextureResource(bitmap.bitmapData);			
+			var texture:BitmapTextureResource = new BitmapTextureResource(bitmap.bitmapData);	
+			
 			return texture;
 		}
 		

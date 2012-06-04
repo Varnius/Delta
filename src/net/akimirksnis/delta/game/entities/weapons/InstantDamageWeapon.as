@@ -3,17 +3,14 @@ package net.akimirksnis.delta.game.entities.weapons
 	import alternativa.engine3d.alternativa3d;
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.core.RayIntersectionData;
-	import alternativa.engine3d.materials.FillMaterial;
 	import alternativa.engine3d.objects.WireFrame;
 	import alternativa.engine3d.primitives.Box;
-	import alternativa.engine3d.primitives.GeoSphere;
 	
 	import flash.geom.Vector3D;
 	import flash.utils.getTimer;
 	
 	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.core.Renderer3D;
-	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.utils.Globals;
 
@@ -58,7 +55,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			var closestStaticIntersection:RayIntersectionData;
 			var finalIntersection:RayIntersectionData;
 			var time:uint = getTimer();
-			trace(time);
+			//trace(time);
 			
 			// Calculate ray from camera (in global space)
 			Renderer3D.instance.camera.calculateRay(

@@ -3,19 +3,25 @@ package net.akimirksnis.delta.game.core
 	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
+	import alternativa.engine3d.lights.OmniLight;
+	import alternativa.engine3d.materials.StandardMaterial;
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
 	import alternativa.engine3d.primitives.Box;
+	import alternativa.engine3d.primitives.Plane;
+	import alternativa.engine3d.resources.TextureResource;
 	
 	import flash.events.Event;
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 	
-	import net.akimirksnis.delta.game.collisions.CollisionOctree;
 	import net.akimirksnis.delta.game.entities.Entity;
+	import net.akimirksnis.delta.game.octrees.CollisionOctree;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
+	
+	import versions.version1.a3d.A3D;
 	
 	[Event(name="hierarchyChanged", type="net.akimirksnis.delta.game.core.GameMap")]
 	public class GameMap extends Object3D
@@ -103,39 +109,51 @@ package net.akimirksnis.delta.game.core
 			Handle collision mesh
 			---------------------------*/
 			
-			// Use dummy box as collision mesh root
-			_collisionMesh = new Box(1, 1, 1, 1, 1, 1);
-			_collisionMesh.name = "collision-mesh-root-new";
-			
-			// Needed only for collision mesh hierarchy showing up in the debug tree 
-			addChild(_collisionMesh);
-			
-			// Create an octree (from collision hierachy) for static colliders
-			_staticCollisionOctree = new CollisionOctree(Mesh(getObjectByName(COLLISION_MESH_NAME)), 5, 5);
-			_staticCollisionOctree.wireframeVisible = false;
-			
-			// Flatten collision mesh hierachy and add to the root
-			var flattenedCollisionMesh:Vector.<Mesh> = Utils.getFlattenedMeshHierachy(Mesh(getObjectByName(COLLISION_MESH_NAME)));
-			var global:Vector3D;
-			
-			// Assign global coords to every collision mesh
-			for each(var m:Mesh in flattenedCollisionMesh)
+			// If collision mesh is present
+			if(getObjectByName(COLLISION_MESH_NAME) != null)
 			{
-				global = m.localToGlobal(Utils.ZERO_VECTOR);				
-				_collisionMesh.addChild(m);
-				m.x = global.x;
-				m.y = global.y;
-				m.z = global.z;
+				// Use dummy box as collision mesh root
+				_collisionMesh = new Box(1, 1, 1, 1, 1, 1);
+				_collisionMesh.name = "collision-mesh-root-new";
+				
+				// Needed only for collision mesh hierarchy showing up in the debug tree 
+				addChild(_collisionMesh);
+				
+				// Create an octree (from collision hierachy) for static colliders
+				_staticCollisionOctree = new CollisionOctree(Mesh(getObjectByName(COLLISION_MESH_NAME)), 5, 5);
+				_staticCollisionOctree.wireframeVisible = false;
+				
+				// Flatten collision mesh hierachy and add to the root
+				var flattenedCollisionMesh:Vector.<Mesh> = Utils.getFlattenedMeshHierachy(Mesh(getObjectByName(COLLISION_MESH_NAME)));
+				var global:Vector3D;
+				
+				// Assign global coords to every collision mesh
+				for each(var m:Mesh in flattenedCollisionMesh)
+				{
+					global = m.localToGlobal(Utils.ZERO_VECTOR);				
+					_collisionMesh.addChild(m);
+					m.x = global.x;
+					m.y = global.y;
+					m.z = global.z;
+				}
+				
+				// Add all collision mesh colliders
+				for(var i:int; i < _collisionMesh.numChildren; i++)
+				{
+					_staticCollisionOctree.addCollider(Mesh(_collisionMesh.getChildAt(i)));
+				}
+				
+				// Hide collision mesh
+				_collisionMesh.visible = false;
+			} else {
+				// Use terrain mesh as collision mesh instead
+				_collisionMesh = _terrainMesh;
+				
+				// Create an octree (from collision hierachy) for static colliders
+				_staticCollisionOctree = new CollisionOctree(_collisionMesh, 5, 5);
+				_staticCollisionOctree.wireframeVisible = false;
+				_staticCollisionOctree.addCollider(_collisionMesh);
 			}
-			
-			// Add all collision mesh colliders
-			for(var i:int; i < _collisionMesh.numChildren; i++)
-			{
-				_staticCollisionOctree.addCollider(Mesh(_collisionMesh.getChildAt(i)));
-			}
-			
-			// Hide collision mesh
-			_collisionMesh.visible = false;
 			
 			/*---------------------------
 			Handle dynamic octree
@@ -324,15 +342,15 @@ package net.akimirksnis.delta.game.core
 			_wireframeRoot.addChild(_collisionMeshWireframe);
 			
 			// Generate wireframes for other meshes
-			for each(var m:Mesh in _mapMeshes)
+			/*for each(var m:Mesh in _mapMeshes)
 			{
-				if(!Utils.isDescendantOf(_terrainMesh, m) && !Utils.isDescendantOf(_collisionMesh, m))
-				{
-					w = WireFrame.createEdges(m, GENERIC_MESH_COLOR);
-					Renderer3D.instance.uploadResources(w.getResources(true));
-					_genericWireframes.addChild(w);
-				}
+			if(!Utils.isDescendantOf(_terrainMesh, m) && !Utils.isDescendantOf(_collisionMesh, m))
+			{
+			w = WireFrame.createEdges(m, GENERIC_MESH_COLOR);
+			Renderer3D.instance.uploadResources(w.getResources(true));
+			_genericWireframes.addChild(w);
 			}
+			}*/
 		}
 		
 		/*---------------------------

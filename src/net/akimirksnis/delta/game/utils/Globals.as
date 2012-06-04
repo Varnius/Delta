@@ -5,7 +5,7 @@ package net.akimirksnis.delta.game.utils
 	import flash.display.Stage3D;
 	import flash.utils.getTimer;
 	
-	import net.akimirksnis.delta.game.controllers.GuiController;
+	import net.akimirksnis.delta.game.gui.GuiController;
 	import net.akimirksnis.delta.game.controllers.IsometricController;
 	import net.akimirksnis.delta.game.controllers.interfaces.IController;
 	import net.akimirksnis.delta.game.core.Core;
@@ -24,7 +24,7 @@ package net.akimirksnis.delta.game.utils
 		public static const MAP_DIR:String = "maps/";
 		
 		// Global gravity
-		public static const GRAVITY:Number = 800;
+		public static const GRAVITY:Number = 1500;
 		
 		// Globals that need assigning a value before using
 		public static var stage:Stage;
