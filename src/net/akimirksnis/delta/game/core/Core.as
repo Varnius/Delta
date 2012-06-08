@@ -112,9 +112,11 @@ package net.akimirksnis.delta.game.core
 			Globals.stage3D.removeEventListener(Event.CONTEXT3D_CREATE, onContext3DCreated);
 			
 			// Paths to config XML files
-			// 1. Assets file (currently config only)
+			// 1. Assets config
+			// 2. Animations config
 			var XMLPaths:Array = [
-				Globals.LOCAL_ROOT + Globals.ASSETS_XML
+				Globals.LOCAL_ROOT + Globals.ASSETS_XML,
+				Globals.LOCAL_ROOT + Globals.ANIMATIONS_XML,
 			];
 
 			// Load base assets
@@ -237,15 +239,9 @@ package net.akimirksnis.delta.game.core
 			
 			// Origin marker
 			
-			var pts:Vector.<Vector3D> = new Vector.<Vector3D>();
-			pts.push(new Vector3D(0,0,0),new Vector3D(300,0,0));
-			var originX:WireFrame = WireFrame.createLinesList(pts, 0xFF0000,1,2);
-			pts = new Vector.<Vector3D>();
-			pts.push(new Vector3D(0,0,0),new Vector3D(0,300,0));
-			var originY:WireFrame = WireFrame.createLinesList(pts, 0x00FF00,1,2);
-			pts = new Vector.<Vector3D>();
-			pts.push(new Vector3D(0,0,0),new Vector3D(0,0,300));
-			var originZ:WireFrame = WireFrame.createLinesList(pts, 0x0000FF,1,2);	
+			var originX:WireFrame = WireFrame.createLinesList(Vector.<Vector3D>([new Vector3D(0, 0, 0), new Vector3D(300, 0, 0),  new Vector3D(300, 0, 0),  new Vector3D(280, 10, 0),  new Vector3D(300, 0, 0),  new Vector3D(280, -10, 0) ]), 0x0000ff, 2);
+			var originY:WireFrame = WireFrame.createLinesList(Vector.<Vector3D>([new Vector3D(0, 0, 0), new Vector3D(0, 300, 0), new Vector3D(0, 300, 0),new Vector3D(0, 280, 10),new Vector3D(0, 300, 0),new Vector3D(0, 280, -10)  ]), 0xff0000, 2);
+			var originZ:WireFrame = WireFrame.createLinesList(Vector.<Vector3D>([new Vector3D(0, 0, 0), new Vector3D(0, 0, 300), new Vector3D(0, 0, 300),new Vector3D(10, 0, 280),new Vector3D(0, 0, 300),new Vector3D(-10, 0, 280) ]), 0x00ff00, 2);
 			
 			renderer.addObject3D(originX, true);
 			renderer.addObject3D(originY, true);

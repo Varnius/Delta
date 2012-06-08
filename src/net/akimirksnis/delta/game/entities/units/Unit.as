@@ -128,8 +128,8 @@ package net.akimirksnis.delta.game.entities.units
 			super.setupAnimations();
 			
 			// Get all animations for this type of entity model
-			var animation:AnimationClip = Library.instance.getAnimationByName(super.type).clone();
-			var animationFrames:String = Library.instance.getPropertiesByName(super.type)["animations"];
+			var animation:AnimationClip = library.getLinkedAnimation(super.type);			
+			var animationFrames:String = library.properties[super.type]["keyframes"];
 			var timeBounds:Vector.<Number> = new Vector.<Number>();
 			
 			animation.attach(mesh, true);
@@ -137,7 +137,7 @@ package net.akimirksnis.delta.game.entities.units
 			if(animationFrames != null || animationFrames != "")
 			{
 				// Iterate through split parts of string
-				for each (var sub:String in animationFrames.split("/"))
+				for each (var sub:String in animationFrames.split(","))
 				{
 					var subsub:Array = sub.split("-");
 					
@@ -382,6 +382,9 @@ package net.akimirksnis.delta.game.entities.units
 					GameMap.currentMap.staticCollisionOctree.getPotentialColliders(this.collisionMesh)
 				);
 			
+			// Discard children if collision mes is flattened
+			var discardChildren:Boolean = GameMap.currentMap.terrainMesh != GameMap.currentMap.collisionMesh;
+			
 			// Set current ellipsoid position
 			source.setTo(mesh.x, mesh.y, mesh.z + this.mesh.boundBox.maxZ / 2);
 			
@@ -392,7 +395,7 @@ package net.akimirksnis.delta.game.entities.units
 				collisionPoint,
 				collisionPlane,
 				potentialColliders,
-				true
+				discardChildren
 			);			
 			
 			if(onGround && !jumpTick)
@@ -426,7 +429,7 @@ package net.akimirksnis.delta.game.entities.units
 				source,
 				displacement,
 				potentialColliders,
-				true
+				discardChildren
 			);			
 			
 			// Set new coordinates of this unit
@@ -445,7 +448,7 @@ package net.akimirksnis.delta.game.entities.units
 				collisionPoint,
 				collisionPlane,
 				potentialColliders,
-				true
+				discardChildren
 			);			
 			
 			if(collisionOccured)

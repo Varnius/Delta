@@ -16,8 +16,10 @@ package net.akimirksnis.delta.game.utils
 	{
 		// Global paths
 		public static const LOCAL_ROOT:String = "C:/Users/Varnius/Desktop/delta/data/"
-		public static const ASSETS_XML:String = "assets.xml";		
+		public static const ASSETS_XML:String = "assets.xml";	
+		public static const ANIMATIONS_XML:String = "animations.xml";
 		public static const MODEL_DIR:String = "models/";
+		public static const ANIMATION_DIR:String = "animations/";
 		public static const MATERIAL_DIR_MODELS:String = "materials/models/";
 		public static const MATERIAL_DIR_MAPS:String = "materials/maps/";
 		public static const SPRITE_DIR:String = "sprites/";

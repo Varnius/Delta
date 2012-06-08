@@ -3,6 +3,7 @@ package net.akimirksnis.delta.game.entities
 	import alternativa.engine3d.animation.AnimationController;
 	import alternativa.engine3d.animation.AnimationSwitcher;
 	import alternativa.engine3d.core.BoundBox;
+	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
 	
@@ -12,8 +13,11 @@ package net.akimirksnis.delta.game.entities
 	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.utils.Globals;
 
-	public class Entity extends EventDispatcher
+	public class Entity extends Object3D
 	{
+		// Entity description
+		protected var _type:String = EntityType.ENTITY_UNDEFINED;
+		
 		//Properties of an entity
 		
 		// Model mesh/skin used within the entity
@@ -22,13 +26,8 @@ package net.akimirksnis.delta.game.entities
 		// Geometry used for collisions
 		protected var _collisionMesh:Mesh;
 		protected var _excludeFromCollisions:Boolean = false;
-		protected var _dynamicCollider:Boolean = false;
+		protected var _dynamicCollider:Boolean = false;		
 		
-		// Entity type
-		protected var _type:String = EntityType.ENTITY_UNDEFINED;
-		
-		// Entity unique name with unique number at the end, like unit_walker1, unit_walker2 etc
-		protected var _name:String = "default_entity_name";
 		//Animation properties		
 		protected var aniController:AnimationController;
 		protected var aniSwitcher:AnimationSwitcher;
@@ -102,15 +101,6 @@ package net.akimirksnis.delta.game.entities
 		---------------------------*/
 		
 		/*---------------------------
-		Misc
-		---------------------------*/
-		
-		public override function toString():String
-		{
-			return _name;
-		}
-		
-		/*---------------------------
 		Getters/setters
 		---------------------------*/
 		
@@ -132,11 +122,6 @@ package net.akimirksnis.delta.game.entities
 		public function get type():String
 		{
 			return _type;
-		}
-		
-		public function get name():String
-		{
-			return _name;
 		}
 		
 		public function get position():Vector3D

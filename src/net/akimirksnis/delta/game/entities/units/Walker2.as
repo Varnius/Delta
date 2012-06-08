@@ -44,7 +44,7 @@ package net.akimirksnis.delta.game.entities.units
 			setupModel(Library.instance.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);
 			
 			// Set unique name
-			_name = type + _count;
+			name = type + _count;
 			
 			// Prepare animations [Unit + Entity]
 			setupAnimations();

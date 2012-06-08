@@ -41,7 +41,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			Globals.renderer.uploadResources(_mesh.getResources());
 			
 			// Set unique name
-			_name = type + _count;
+			name = type + _count;
 			
 			// Prepare animations [Unit + Entity]
 			setupAnimations();

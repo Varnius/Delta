@@ -1,20 +1,23 @@
 package net.akimirksnis.delta.game.loaders
 {
-	import alternativa.engine3d.core.Object3D;
+	import alternativa.engine3d.animation.AnimationClip;
+	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.Sprite3D;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.ProgressEvent;
 	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
 	
 	import net.akimirksnis.delta.game.core.GameMap;
-	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.core.Library;
+	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.loaders.events.CoreLoaderEvent;
 	import net.akimirksnis.delta.game.loaders.loaders.MapLoader;
 	import net.akimirksnis.delta.game.loaders.loaders.ModelLoader;
 	import net.akimirksnis.delta.game.loaders.loaders.XMLConfigLoader;
+	import net.akimirksnis.delta.game.loaders.parsers.BinaryModelFormat;
 	import net.akimirksnis.delta.game.loaders.parsers.MapParser;
 	import net.akimirksnis.delta.game.loaders.parsers.ModelParser;
 	import net.akimirksnis.delta.game.utils.Globals;
@@ -26,20 +29,17 @@ package net.akimirksnis.delta.game.loaders
 	public class CoreLoader extends EventDispatcher
 	{
 		private var XMLPaths:Array;
-		private var library:Library;
-		private var rawModels:Vector.<Object>;
-		private var _configs:Vector.<XML>;		
-		
-		// Config load progress
-		private var configsLoaded:Boolean = false;
+		private var library:Library;		
+		private var _configs:Vector.<XML>;
 		
 		// Asset load progress
 		private var assetLoadStatus:Object =
 		{
+			configs:    false,
 			models: 	false,
 			sprites: 	false,
 			materials: 	false,				
-			animations: true,
+			animations: false,
 			sounds: 	true			
 		};
 		
@@ -85,9 +85,6 @@ package net.akimirksnis.delta.game.loaders
 				totalSteps++;
 			}
 			
-			// +1 for config laoding
-			totalSteps++;
-			
 			// Load XML configs
 			var xmlLoader:XMLConfigLoader = new XMLConfigLoader();
 			xmlLoader.addEventListener(Event.COMPLETE, onConfigsLoaded, false, 0, true);			
@@ -123,27 +120,6 @@ package net.akimirksnis.delta.game.loaders
 			mapLoader.loadMap();
 		}
 		
-		/**
-		 * Gets config XML by filename.
-		 * 
-		 * @param filename Name of the config file.
-		 */
-		public function getConfigByFilename(filename:String):XML
-		{
-			var result:XML;
-			
-			// todo: order
-			for each(var fn:String in XMLPaths)
-			{
-				if(fn == filename)
-				{
-					return _configs[XMLPaths.indexOf(fn)];
-				}
-			}
-			
-			return result;
-		}
-		
 		/*---------------------------
 		Asset loading event callbacks
 		---------------------------*/
@@ -155,9 +131,13 @@ package net.akimirksnis.delta.game.loaders
 		 */
 		private function onConfigsLoaded(e:Event):void
 		{
-			configsLoaded = true;
+			assetLoadStatus.configs = true;
 			onAssetLoadPartComplete();
 			preloader.text = "Loading assets...";			
+			
+			/*---------------------------
+			Fetch level list
+			---------------------------*/
 			
 			var loader:XMLConfigLoader = XMLConfigLoader(e.currentTarget);
 			loader.removeEventListener(Event.COMPLETE, onConfigsLoaded);
@@ -174,14 +154,105 @@ package net.akimirksnis.delta.game.loaders
 					}	
 				);
 			}
+			
+			/*---------------------------
+			Fetch model properties
+			---------------------------*/
+			
+			var attributes:XMLList;
+			var dic:Dictionary;
+			
+			// Get all properties for each model in assets cfg
+			for each(x in _configs[0].models.model)
+			{
+				attributes = x.@*;
+				dic = new Dictionary();
+				
+				for each(var tmp:XML in attributes)
+				{
+					dic[tmp.name().toString()] = tmp.toString();
+				}
+				
+				// Use model filename without extension as a key
+				library.properties[Utils.trimExtension(x.@filename)] = dic;
+			}
+			
+			/*---------------------------
+			Load standalone animations
+			---------------------------*/
+			
+			var animationLoader:ModelLoader = new ModelLoader(Globals.LOCAL_ROOT + Globals.ANIMATION_DIR, _configs[1].animation);
+			animationLoader.addEventListener(Event.COMPLETE, onAnimationsLoaded, false, 0, true);
+			animationLoader.loadModels();
 
-			// Load models
+			/*---------------------------
+			Load models
+			---------------------------*/
+			
 			var modelLoader:ModelLoader = new ModelLoader(Globals.LOCAL_ROOT + Globals.MODEL_DIR, _configs[0].models.model);
 			modelLoader.addEventListener(Event.COMPLETE, onModelsLoaded, false, 0, true);
 			modelLoader.loadModels();
 			
-			// Load sounds
-			// ...
+			/*---------------------------
+			Load sounds
+			---------------------------*/
+			
+			// ..
+		}
+		
+		/**
+		 * Fired after animations are loaded.
+		 * 
+		 * @param e Event object.
+		 */
+		private function onAnimationsLoaded(e:Event):void
+		{	
+			var loader:ModelLoader = ModelLoader(e.currentTarget);
+			var rawAnimations:Vector.<Object> = loader.loadedData;
+			var modelParser:ModelParser = new ModelParser();
+			var currentAnimation:AnimationClip;
+			
+			loader.removeEventListener(Event.COMPLETE, onAnimationsLoaded);
+			
+			// Parse animations
+			for each(var animation:Object in rawAnimations)
+			{
+				trace("[CoreLoader] > Parsing animation:", animation.fileName);
+				
+				// Get filename without extension
+				var filenameNoExtension:String = Utils.trimExtension(animation.fileName);
+				
+				// Determine whether animation data is binary (A3D, 3DS) or XML (Collada)
+				if(animation.binary)
+				{						
+					switch(animation.dataFormat)
+					{
+						case BinaryModelFormat.A3D:
+						{
+							currentAnimation = modelParser.parseA3DAnimation(ByteArray(animation.modelData));
+							break;
+						}
+						case BinaryModelFormat.THREE_DS:
+						{
+							// ..
+							break;
+						}
+						default:
+						{
+							throw new Error("[CoreLoader] > Unsupported file format: '" + animation.dataFormat + "'");
+						}
+					}
+					
+				} else {						
+					currentAnimation = modelParser.parseA3DAnimation(ByteArray(animation.modelData));					
+				}
+				
+				currentAnimation.name = filenameNoExtension;
+				library.standaloneAnimations.push(currentAnimation);
+			}
+			
+			assetLoadStatus.animations = true;
+			onAssetLoadPartComplete();
 		}
 		
 		/**
@@ -193,83 +264,99 @@ package net.akimirksnis.delta.game.loaders
 		{			
 			var loader:ModelLoader = ModelLoader(e.currentTarget);
 			var modelParser:ModelParser = new ModelParser();
-			var currentModels:Vector.<Object3D>;
+			var currentModel:Mesh;
 			var currentSprite:Sprite3D;
+			var rawModels:Vector.<Object> = loader.loadedData;
 			
 			loader.removeEventListener(Event.COMPLETE, onModelsLoaded);
-			rawModels = loader.loadedData;
 			
-			try {
-				trace("[CoreLoader] > Parsing model files..");
+			trace("[CoreLoader] > Parsing model files..");
+			
+			// Parse models
+			for each(var model:Object in rawModels)
+			{				
+				trace("[CoreLoader] > Parsing model:", model.fileName);
 				
-				// Parse models
-				for each(var model:Object in rawModels)
-				{				
-					trace("[CoreLoader] > Parsing model:", model.fileName);
-					
-					// Get filename without extension (since the file is in a directory of this name)
-					var modelMaterialsDir:String = Utils.trimExtension(model.fileName);
-					
-					// Determine whether model data is binary (A3D, 3DS) or text (Collada)
-					if(model.binary)
+				// Get filename without extension
+				var filenameNoExtension:String = Utils.trimExtension(model.fileName);
+				
+				// Determine whether model data is binary (A3D, 3DS) or XML (Collada)
+				if(model.binary)
+				{						
+					switch(model.dataFormat)
 					{
-						currentModels = modelParser.parseBinaryModel(
-							ByteArray(model.modelData),
-							model.dataFormat,
-							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + modelMaterialsDir + "/",
-							library.animations
-						);
-					} else {						
-						currentModels = modelParser.parseColladaModel(
-							XML(model.modelData),
-							Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + modelMaterialsDir + "/",
-							library.animations,
-							library.properties
-						);
+						case BinaryModelFormat.A3D:
+						{
+							currentModel = modelParser.parseA3DModel(
+								ByteArray(model.modelData),
+								Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + filenameNoExtension + "/",
+								library.linkedAnimations
+							);
+							
+							break;
+						}
+						case BinaryModelFormat.THREE_DS:
+						{
+							// ..
+							break;
+						}
+						default:
+						{
+							throw new Error("[CoreLoader] > Unsupported file format: '" + model.dataFormat + "'");
+						}
 					}
 					
-					// Add each parsed model to the library
-					for each(var item:Object3D in currentModels)
-					{
-						library.addObject(item);
-					}
-					
-					trace("-------");
-				}
-				
-				trace("[CoreLoader] > Parsing sprites..");
-				
-				// Parse sprites
-				for each(var o:Object in _configs[0].sprites.sprite)
-				{
-					trace("[CoreLoader] > Parsing sprite:", o.@name);
-					
-					currentSprite = modelParser.parseSprite(
-						o.@name,
-						parseInt(o.@width),
-						parseInt(o.@height),
-						Globals.LOCAL_ROOT + Globals.SPRITE_DIR + o.@diffuseMap,
-						Globals.LOCAL_ROOT + Globals.SPRITE_DIR + o.@opacityMap,
-						parseFloat(o.@opacity)
+				} else {						
+					currentModel = modelParser.parseColladaModel(
+						XML(model.modelData),
+						Globals.LOCAL_ROOT + Globals.MATERIAL_DIR_MODELS + filenameNoExtension + "/",
+						library.linkedAnimations
 					);
-					
-					// Add parsed sprite to the library
-					library.addObject(currentSprite);
-					
-					trace("-------");
 				}
 				
-				// Load materials
-				modelParser.addEventListener(ProgressEvent.PROGRESS, onMaterialLoadingProgress, false, 0, true);
-				modelParser.addEventListener(Event.COMPLETE, onMaterialLoadingComplete, false, 0, true);
-				modelParser.loadMaterials();	
+				currentModel.name = filenameNoExtension;
+				library.addObject(currentModel);
 				
-				assetLoadStatus.models = assetLoadStatus.sprites = true;
-				onAssetLoadPartComplete();
-				 
-			} catch(e:Error) {
-				trace("[CoreLoader] > Error cought: " + e.message + ".");
-			}			
+				// Link standalone animation if it`s defined in the config
+				var animationAttribute:String = library.properties[currentModel.name]["animation"];
+				
+				if(animationAttribute != null)
+				{
+					library.linkedAnimations[currentModel] = library.getStandaloneAnimation(animationAttribute);
+				}
+				
+				trace("-------");
+			}
+			
+			trace("[CoreLoader] > Parsing sprites..");
+			
+			// Parse sprites
+			for each(var o:Object in _configs[0].sprites.sprite)
+			{
+				trace("[CoreLoader] > Parsing sprite:", o.@name);
+				
+				currentSprite = modelParser.parseSprite(
+					o.@name,
+					parseInt(o.@width),
+					parseInt(o.@height),
+					Globals.LOCAL_ROOT + Globals.SPRITE_DIR + o.@diffuseMap,
+					Globals.LOCAL_ROOT + Globals.SPRITE_DIR + o.@opacityMap,
+					parseFloat(o.@opacity)
+				);
+				
+				// Add parsed sprite to the library
+				library.addObject(currentSprite);
+				
+				trace("-------");
+			}
+			
+			// Load materials
+			modelParser.addEventListener(ProgressEvent.PROGRESS, onMaterialLoadingProgress, false, 0, true);
+			modelParser.addEventListener(Event.COMPLETE, onMaterialLoadingComplete, false, 0, true);
+			modelParser.loadMaterials();	
+			
+			assetLoadStatus.models = assetLoadStatus.sprites = true;
+			onAssetLoadPartComplete();	
 		}
 		
 		/**
@@ -305,43 +392,32 @@ package net.akimirksnis.delta.game.loaders
 		private function onAssetLoadPartComplete():void
 		{
 			var result:Boolean = true;
+				
+			currentStep = totalSteps;
 			
-			// Handle configs
+			// Handle assets
 			
-			if(configsLoaded)
+			for each(var property:Boolean in assetLoadStatus)
 			{
-				configsLoaded = false;
-				dispatchEvent(new Event(CoreLoaderEvent.CONFIGS_LOADED));
-				currentStep++;
-				trace("[CoreLoader] > All configs loaded");	
-			} else {
-				
-				currentStep = totalSteps;
-				
-				// Handle assets
-				
-				for each(var property:Boolean in assetLoadStatus)
+				// If at least one property is still false
+				if(!property)
+				{					
+					result = false;
+					currentStep--;					
+				}		
+			}
+			
+			// If everything is loaded
+			if(result)
+			{
+				for each(property in assetLoadStatus)
 				{
-					// If at least one property is still false
-					if(!property)
-					{					
-						result = false;
-						currentStep--;					
-					}		
+					property = false;
 				}
 				
-				// If everything is loaded
-				if(result)
-				{
-					for each(property in assetLoadStatus)
-					{
-						property = false;
-					}
-					
-					preloader.unfocus();
-					dispatchEvent(new Event(CoreLoaderEvent.ASSETS_LOADED));				
-					trace("[CoreLoader] > All assets loaded.");
-				}
+				preloader.unfocus();
+				dispatchEvent(new Event(CoreLoaderEvent.ASSETS_LOADED));				
+				trace("[CoreLoader] > All assets loaded.");
 			}
 			
 			updatePreloaderStep();
@@ -363,7 +439,7 @@ package net.akimirksnis.delta.game.loaders
 			var mapParser:MapParser = new MapParser();
 			var map:GameMap = new GameMap();
 			
-			loader.removeEventListener(Event.COMPLETE, onModelsLoaded);			
+			loader.removeEventListener(Event.COMPLETE, onMapLoaded);			
 			
 			try {							
 				trace("[CoreLoader] > Parsing map:", rawMap.fileName);

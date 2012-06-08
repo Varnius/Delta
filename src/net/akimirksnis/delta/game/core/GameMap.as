@@ -1,27 +1,18 @@
 package net.akimirksnis.delta.game.core
 {
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.lights.OmniLight;
-	import alternativa.engine3d.materials.StandardMaterial;
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.objects.WireFrame;
 	import alternativa.engine3d.primitives.Box;
-	import alternativa.engine3d.primitives.Plane;
-	import alternativa.engine3d.resources.TextureResource;
 	
 	import flash.events.Event;
 	import flash.geom.Vector3D;
-	import flash.utils.Dictionary;
-	import flash.utils.getTimer;
 	
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.octrees.CollisionOctree;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
-	
-	import versions.version1.a3d.A3D;
 	
 	[Event(name="hierarchyChanged", type="net.akimirksnis.delta.game.core.GameMap")]
 	public class GameMap extends Object3D
@@ -52,7 +43,6 @@ package net.akimirksnis.delta.game.core
 		private var _entities:Vector.<Entity> = new Vector.<Entity>();
 		private var _collisionMesh:Mesh;
 		private var _terrainMesh:Mesh;
-		private var _mapProperties:Dictionary = new Dictionary();
 		private var _wireframeRoot:Object3D;
 		
 		/*---------------------------
@@ -423,18 +413,6 @@ package net.akimirksnis.delta.game.core
 		public function get collisionMesh():Mesh
 		{
 			return _collisionMesh;
-		}
-		
-		/**
-		 * Map object property dictionary.
-		 */
-		public function get mapProperties():Dictionary
-		{
-			return _mapProperties;
-		}
-		public function set mapProperties(value:Dictionary):void
-		{
-			_mapProperties = value;
 		}
 		
 		/**

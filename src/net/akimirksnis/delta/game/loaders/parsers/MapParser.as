@@ -11,7 +11,6 @@ package net.akimirksnis.delta.game.loaders.parsers
 	
 	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.loaders.parsers.extended.DeltaParserA3D;
-	import net.akimirksnis.delta.game.loaders.parsers.extended.DeltaParserCollada;
 	
 	public class MapParser extends ModelParser
 	{		
@@ -38,7 +37,7 @@ package net.akimirksnis.delta.game.loaders.parsers
 		):void
 		{
 			var currentMesh:Mesh;
-			var parser:DeltaParserCollada = new DeltaParserCollada();
+			var parser:ParserCollada = new ParserCollada();
 			var meshVectorTemp:Vector.<Mesh> = new Vector.<Mesh>();
 			
 			// Parse file and trim filepaths to textures
@@ -91,17 +90,9 @@ package net.akimirksnis.delta.game.loaders.parsers
 				}
 			}
 			
-			// Store map object props in the library
-			map.mapProperties = parser.properties;
-			
-			var lightPerVertex:Boolean;
-			var properties:Object;
-			
 			// Parse meshes - upload geometry and initiate mesh texture loading  
 			for each(var mesh:Mesh in meshVectorTemp)
-			{
-				properties = parser.getPropertiesByObject(mesh);				
-				
+			{				
 				// Parse mesh (parse geometry ony if current mesh is collision mesh
 				parseMesh(mesh, mesh.name == GameMap.COLLISION_MESH_NAME);
 			}
@@ -178,18 +169,9 @@ package net.akimirksnis.delta.game.loaders.parsers
 				}
 			}
 			
-			// Store map object props in the library
-			// todo:implement
-			//map.mapProperties = parser.properties;
-			
-			var lightPerVertex:Boolean;
-			var properties:Object;
-			
 			// Parse meshes - upload geometry and initiate mesh texture loading  
 			for each(var mesh:Mesh in meshVectorTemp)
-			{
-				//properties = parser.getPropertiesByObject(mesh);				
-				
+			{			
 				// Parse mesh (parse geometry ony if current mesh is collision mesh)
 				parseMesh(mesh, mesh.name == GameMap.COLLISION_MESH_NAME);
 			}

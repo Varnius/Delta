@@ -12,6 +12,6 @@ package net.akimirksnis.delta.game.entities
 		public static const WEAPON_SMG:String = "weapon_smg";
 		
 		// Static entities
-		public static const STATIC_TEAPOT:String = "static_teapot";
+		public static const STATIC_TEAPOT:String = "teapot";
 	}
 }

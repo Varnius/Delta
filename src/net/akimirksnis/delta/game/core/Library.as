@@ -26,7 +26,10 @@ package net.akimirksnis.delta.game.core
 		---------------------------*/
 		
 		// Parsed animations for skins (keys - objects from skinVector)
-		private var _animations:Dictionary = new Dictionary();		
+		private var _linkedAnimations:Dictionary = new Dictionary();	
+		
+		// Parsed from standalone animation files
+		private var _standaloneAnimations:Vector.<AnimationClip> = new Vector.<AnimationClip>();
 		
 		/*---------------------------
 		Misc
@@ -89,28 +92,36 @@ package net.akimirksnis.delta.game.core
 			}
 			
 			return null;
-		}	
-		
-		/**
-		 * Gets animation by object name.
-		 * 
-		 * @param name Object name.
-		 * @return AnimationClip instance.
-		 */
-		public function getAnimationByName(name:String):AnimationClip
-		{
-			return _animations[getObjectByName(name)];
 		}
 		
 		/**
-		 * Gets properties by object name.
+		 * Returns linked animation.
 		 * 
-		 * @param name Object name.
-		 * @return Object cotnaining the properties.
+		 * @param name Name of the object the animation is linked to.
+		 * @return Result animation.
 		 */
-		public function getPropertiesByName(name:String):Object
+		public function getLinkedAnimation(name:String):AnimationClip
 		{
-			return _properties[getObjectByName(name)];
+			return _linkedAnimations[getObjectByName(name)];
+		}
+		
+		/**
+		 * Returns standalone animation.
+		 * 
+		 * @param name Name of the animation (filename).
+		 * @return Result animation.
+		 */
+		public function getStandaloneAnimation(name:String):AnimationClip
+		{
+			for each(var a:AnimationClip in _standaloneAnimations)
+			{
+				if(a.name == name)
+				{
+					return a;
+				}
+			}
+			
+			return null;
 		}
 		
 		/*---------------------------
@@ -158,11 +169,19 @@ package net.akimirksnis.delta.game.core
 		}
 		
 		/**
-		 * Dictionary of animations.
+		 * Dictionary of object linked animations.
 		 */
-		public function get animations():Dictionary
+		public function get linkedAnimations():Dictionary
 		{
-			return _animations;
+			return _linkedAnimations;
+		}
+		
+		/**
+		 * Dictionary of object linked animations.
+		 */
+		public function get standaloneAnimations():Vector.<AnimationClip>
+		{
+			return _standaloneAnimations;
 		}
 		
 		/**
