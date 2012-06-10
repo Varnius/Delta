@@ -225,7 +225,7 @@ package net.akimirksnis.delta.game.core
 			_units.push(_unit);			
 			ctents.push(_unit);
 			
-			map.addEntity(new Walker2, "marker-spawn1");	
+			//map.addEntity(new Walker2, "marker-spawn1");	
 			
 			/*var oc:Occluder = new Occluder();
 			var ocp:Plane = new Plane(10000,10000,1,1,true,false, new FillMaterial(0xFFF000, 0.25),new FillMaterial(0xFFF000, 0.25));

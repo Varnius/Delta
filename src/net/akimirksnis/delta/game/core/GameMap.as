@@ -9,7 +9,9 @@ package net.akimirksnis.delta.game.core
 	import flash.events.Event;
 	import flash.geom.Vector3D;
 	
+	import net.akimirksnis.delta.game.entities.DynamicEntity;
 	import net.akimirksnis.delta.game.entities.Entity;
+	import net.akimirksnis.delta.game.entities.StaticEntity;
 	import net.akimirksnis.delta.game.octrees.CollisionOctree;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
@@ -206,24 +208,26 @@ package net.akimirksnis.delta.game.core
 				if(marker != null)
 				{
 					globalCoords = marker.localToGlobal(zeroVector);
-					entity.mesh.x = globalCoords.x;
-					entity.mesh.y = globalCoords.y;
-					entity.mesh.z = globalCoords.z;	
+					entity.x = globalCoords.x;
+					entity.y = globalCoords.y;
+					entity.z = globalCoords.z;
 				}
 			}
 			
-			addChild(entity.mesh);
+			addChild(entity);
 			
 			// Add entity as collider in the collision octree
-			if(!entity.excludeFromCollisions)
+			if(entity is DynamicEntity)
 			{
-				if(entity.dynamicCollider)				
+				if(!(entity as DynamicEntity).excludeFromCollisions)			
 				{
 					_dynamicEntities.push(entity);
 					_dynamicCollisionOctree.addCollider(entity.collisionMesh);					
-				} else {
-					_staticCollisionOctree.addCollider(entity.collisionMesh);
 				}
+				
+			} else if(entity is StaticEntity)
+			{
+				_staticCollisionOctree.addCollider(entity.collisionMesh);
 			}
 			
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
@@ -246,26 +250,25 @@ package net.akimirksnis.delta.game.core
 				}
 			}
 			
-			// Remove entity from collision octree
-			if(!entity.excludeFromCollisions)
+			if(entity is DynamicEntity)
 			{
-				if(entity.dynamicCollider)
+				if((!entity as DynamicEntity).excludeFromCollisions)			
 				{
 					for(i = 0; i < _dynamicEntities.length; i++)
 					{
 						if(_dynamicEntities[i] == entity)
 						{
 							_dynamicEntities.splice(i, 1);
-							_dynamicCollisionOctree.removeCollider(entity.mesh);
+							_dynamicCollisionOctree.removeCollider(entity.collisionMesh);
 							break;
 						}
-					}
-				} else {
-					_staticCollisionOctree.removeCollider(entity.mesh);
+					}			
 				}
-			}			
-			
-			entity.dispose();			
+				
+			} else if(entity is StaticEntity)
+			{
+				_staticCollisionOctree.removeCollider(entity.collisionMesh);
+			}		
 			
 			dispatchEvent(new Event(GameMap.HIERARCHY_CHANGED));
 		}

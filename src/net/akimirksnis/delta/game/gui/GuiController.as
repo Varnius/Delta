@@ -5,11 +5,12 @@ package net.akimirksnis.delta.game.gui
 	
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
+	import flash.display.StageDisplayState;
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.KeyboardEvent;
 	
 	import net.akimirksnis.delta.game.controllers.interfaces.IController;
-	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.gui.controllers.ComponentController;
 	import net.akimirksnis.delta.game.gui.controllers.DebugOverlayController;
 	import net.akimirksnis.delta.game.gui.controllers.LevelSelectionOverlayController;
@@ -17,8 +18,11 @@ package net.akimirksnis.delta.game.gui
 	import net.akimirksnis.delta.game.gui.controllers.PreloaderOverlayController;
 	import net.akimirksnis.delta.game.utils.Globals;
 
-	public class GuiController implements IController
+	[Event(name="DisplayStateChanged", type="net.akimirksnis.delta.game.gui.GuiController")]
+	public class GuiController extends EventDispatcher implements IController
 	{		
+		public static const DISPLAY_STATE_CHANGED:String = "DisplayStateChanged";
+		
 		private static var _allowInstantiation:Boolean = false;
 		private static var _instance:GuiController = new GuiController(SingletonLock);
 		
@@ -184,7 +188,8 @@ package net.akimirksnis.delta.game.gui
 		 */
 		private function onKeyUp(e:KeyboardEvent):void
 		{
-			// F1 - show/hide debug overlay
+			// Key: F1
+			// Show/hide debug overlay
 			if(Globals.DEBUG_MODE)
 			{
 				if(e.keyCode == 112)
@@ -220,6 +225,28 @@ package net.akimirksnis.delta.game.gui
 						debugOverlayController.focus();
 					}			
 				}
+			}
+			
+			// Key: F12
+			// Enter fullscreen mode
+			if(e.keyCode == 123)
+			{
+				if(Globals.stage.displayState == StageDisplayState.NORMAL)
+				{
+					Globals.stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
+				} else {
+					Globals.stage.displayState = StageDisplayState.NORMAL;
+					// Flash disables mouse lock automatically
+				}
+				
+				dispatchEvent(new Event(DISPLAY_STATE_CHANGED));
+			}
+			
+			// Key: Esc
+			// Escape full screen, disable mouseLock
+			if(e.keyCode == 27)
+			{
+				dispatchEvent(new Event(DISPLAY_STATE_CHANGED));
 			}
 		}
 		

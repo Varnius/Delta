@@ -22,7 +22,7 @@ package net.akimirksnis.delta.game.octrees
 		private var wrapperClass:Class;
 		delta_internal var instanceNum:int;		
 		delta_internal var partitions:Vector.<Partition> = new Vector.<Partition>();
-		delta_internal var colliders:Vector.<Mesh> = new Vector.<Mesh>();	
+		delta_internal var colliders:Vector.<Object3D> = new Vector.<Object3D>();	
 		delta_internal var isSplit:Boolean = false;
 		delta_internal var parent:Partition;		
 		delta_internal var minX:Number;
@@ -94,7 +94,7 @@ package net.akimirksnis.delta.game.octrees
 		 * @param source An Object3D whuch will be used to calculate nearby colliders.
 		 * @return A list of potential colliders.
 		 */
-		delta_internal function getPotentialColliders(source:Mesh):Vector.<Object3D>
+		delta_internal function getPotentialColliders(source:Object3D):Vector.<Object3D>
 		{
 			var result:Vector.<Object3D> = new Vector.<Object3D>();
 			var fitSomewhere:Boolean = false;	
@@ -226,7 +226,7 @@ package net.akimirksnis.delta.game.octrees
 		 * Adds collider to the partition. Partition splits in case number
 		 * of added objects is greater than MAX_OBJECTS_PER_PARTITION constant.
 		 */
-		delta_internal function addCollider(collider:Mesh):void
+		delta_internal function addCollider(collider:Object3D):void
 		{			
 			var addedDeeper:Boolean = false;
 
@@ -291,7 +291,7 @@ package net.akimirksnis.delta.game.octrees
 		 * 
 		 * @param collider Collider to remove.
 		 */
-		delta_internal function removeCollider(collider:Mesh):void
+		delta_internal function removeCollider(collider:Object3D):void
 		{
 			colliders.splice(colliders.indexOf(collider), 1);	
 			collidersAndPartitions[collider] = null;
@@ -336,7 +336,7 @@ package net.akimirksnis.delta.game.octrees
 		 *
 		 * @param collider Source object.
 		 */
-		delta_internal function updateColliderPosition(collider:Mesh):void
+		delta_internal function updateColliderPosition(collider:Object3D):void
 		{
 			// If collider do not fit into this partition anymore
 			if(!fits(collider))
@@ -377,7 +377,7 @@ package net.akimirksnis.delta.game.octrees
 		 * @param collider Collider.
 		 * @return True if collider fits, false otherwise.
 		 */
-		delta_internal function fits(collider:Mesh):Boolean
+		delta_internal function fits(collider:Object3D):Boolean
 		{
 			temp.setTo(collider.boundBox.minX, collider.boundBox.minY, collider.boundBox.minZ);
 			temp.copyFrom(collider.localToGlobal(temp));
@@ -440,9 +440,9 @@ package net.akimirksnis.delta.game.octrees
 		 * @param excludeTop Do not include colliders from the object which initiated the search.
 		 * @return List of objects.
 		 */
-		delta_internal function getCollidersRecursively(excludeTop:Boolean = false):Vector.<Mesh>
+		delta_internal function getCollidersRecursively(excludeTop:Boolean = false):Vector.<Object3D>
 		{
-			var result:Vector.<Mesh> = new Vector.<Mesh>();
+			var result:Vector.<Object3D> = new Vector.<Object3D>();
 			
 			if(!excludeTop)
 			{
@@ -576,7 +576,7 @@ package net.akimirksnis.delta.game.octrees
 			{
 				parent.merge();
 			} else {
-				var tmpColliders:Vector.<Mesh> = getCollidersRecursively(true);
+				var tmpColliders:Vector.<Object3D> = getCollidersRecursively(true);
 				
 				// Dispose child partitions
 				for each(var p:Partition in partitions)
@@ -588,7 +588,7 @@ package net.akimirksnis.delta.game.octrees
 				isSplit = false;
 				
 				// Re-add all colliders
-				for each(var collider:Mesh in tmpColliders)
+				for each(var collider:Object3D in tmpColliders)
 				{
 					addCollider(collider);
 				}				
@@ -604,7 +604,7 @@ package net.akimirksnis.delta.game.octrees
 		 * 
 		 * @param collider Collider outside octree bounds.
 		 */
-		private function grow(collider:Mesh):void
+		private function grow(collider:Object3D):void
 		{		
 			var colliderMinGlobal:Vector3D = collider.localToGlobal(new Vector3D(collider.boundBox.minX, collider.boundBox.minY, collider.boundBox.minZ));
 			

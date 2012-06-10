@@ -38,7 +38,7 @@ package net.akimirksnis.delta.game.entities.statics
 			_type = EntityType.STATIC_TEAPOT;
 			
 			// Set entity model
-			setupModel(Library.instance.getObjectByName(EntityType.STATIC_TEAPOT).clone() as Mesh);
+			setModel(Library.instance.getObjectByName(EntityType.STATIC_TEAPOT).clone() as Mesh);
 			
 			// Set unique name
 			_name = type + _count;

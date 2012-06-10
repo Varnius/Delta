@@ -1,24 +1,20 @@
 package net.akimirksnis.delta.game.entities.units
 {
 	import alternativa.engine3d.animation.AnimationClip;
-	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.materials.FillMaterial;
-	import alternativa.engine3d.primitives.GeoSphere;
 	
 	import flash.geom.Vector3D;
 	import flash.utils.getTimer;
 	
 	import net.akimirksnis.delta.game.core.GameMap;
-	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.entities.AnimationType;
-	import net.akimirksnis.delta.game.entities.Entity;
+	import net.akimirksnis.delta.game.entities.DynamicEntity;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
 	import net.akimirksnis.delta.game.intersections.Intersector;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
-	public class Unit extends Entity
+	public class Unit extends DynamicEntity
 	{	
 		/*---------------------------
 		Constants
@@ -38,6 +34,9 @@ package net.akimirksnis.delta.game.entities.units
 		// Current velocity of unit (in each direction)
 		private var velocity:Vector3D = new Vector3D();
 		
+		// External velocity
+		public var velocityFromInput:Vector3D = new Vector3D();
+		
 		// Vectors defining orientation of the unit
 		private var up:Vector3D = new Vector3D();		
 		private var forward:Vector3D = new Vector3D();
@@ -48,7 +47,7 @@ package net.akimirksnis.delta.game.entities.units
 		private var scaledForward:Vector3D = new Vector3D();
 		
 		// Stores unified input velocity
-		private var summedUpDirections:Vector3D = new Vector3D();
+		private var summedUpDirections:Vector3D = new Vector3D();		
 		
 		private var unitSpaceVelocity:Vector3D = new Vector3D();
 		private var accelerationAmount:Number = 100;
@@ -69,12 +68,6 @@ package net.akimirksnis.delta.game.entities.units
 		private var lineMeshIntersectionResult:Vector3D = new Vector3D();	
 		private var finalDestinationNoCollision:Vector3D = new Vector3D();
 		private var slideDampingCoef:Number = 0.95;
-		
-		/*---------------------------
-		Collisions
-		---------------------------*/
-		
-		private var collider:EllipsoidCollider;
 		
 		/*---------------------------
 		Animation types
@@ -116,13 +109,15 @@ package net.akimirksnis.delta.game.entities.units
 			---------------------------*/
 			
 			_excludeFromCollisions = false;
-			_dynamicCollider = true;
 		}
 		
 		/*---------------------------
 		Setup methods
 		---------------------------*/
 		
+		/**
+		 * @inherit
+		 */
 		protected override function setupAnimations():void
 		{
 			super.setupAnimations();
@@ -132,7 +127,7 @@ package net.akimirksnis.delta.game.entities.units
 			var animationFrames:String = library.properties[super.type]["keyframes"];
 			var timeBounds:Vector.<Number> = new Vector.<Number>();
 			
-			animation.attach(mesh, true);
+			animation.attach(_mesh, true);
 			
 			if(animationFrames != null || animationFrames != "")
 			{
@@ -171,31 +166,31 @@ package net.akimirksnis.delta.game.entities.units
 			}
 		}
 		
-		protected function setupCollider(collider:EllipsoidCollider):void
-		{
-			this.collider = collider;
-			
-			// Collision spehere visualisation
-			if(Globals.DEBUG_MODE)
-			{
-				var rutul:GeoSphere = new GeoSphere(1,10,false,new FillMaterial(0xAAFF00, 0.4));
-				Globals.renderer.uploadResources(rutul.getResources());
-				this.mesh.addChild(rutul);
-				rutul.scaleX = collider.radiusX;
-				rutul.scaleY = collider.radiusY;
-				rutul.scaleZ = collider.radiusZ;
-				rutul.z = this.mesh.boundBox.maxZ / 2;
-			}
-		}
-		
 		/*---------------------------
 		Public methods
 		---------------------------*/
 		
-		public function think():void
+		/**
+		 * @inherit
+		 */
+		public override function think():void
 		{
+			super.think();
+			
+			// Handle input
+			handleVelocityFromInput();
+			
 			// Handle movement
 			move();
+		}
+		
+		/**
+		 * @inherit
+		 */
+		public override function dispose():void
+		{
+			Globals.gameCore.removeLoopCallbackPre(aniController.update);
+			super.dispose();
 		}
 		
 		/*---------------------------
@@ -215,6 +210,9 @@ package net.akimirksnis.delta.game.entities.units
 			}
 		}		
 		
+		/**
+		 * :)
+		 */
 		public function propulse():void
 		{
 			// Allow jumping if unit is on ground and at least two frames passed since last jump
@@ -253,14 +251,10 @@ package net.akimirksnis.delta.game.entities.units
 		}
 		
 		/**
-		 * Adds velocity depending on user input.
-		 * 
-		 * @param input Defines user input. Each of x/y/z variables
-		 * marks the amount of movement for each axis. This data is
-		 * translated depending on rotation of the unit.
+		 * Handles velocity influenced by user input.
 		 */
-		public function addVelocityFromInput(input:Vector3D):void
-		{
+		private function handleVelocityFromInput():void
+		{			
 			// Reset vectors
 			up.copyFrom(Utils.UP_VECTOR);
 
@@ -269,8 +263,8 @@ package net.akimirksnis.delta.game.entities.units
 			----------------------*/
 			
 			// Calculate forward vector from unit rotation
-			forward.x = Math.cos(mesh.rotationZ - Utils.HALF_PI);
-			forward.y = Math.sin(mesh.rotationZ - Utils.HALF_PI);
+			forward.x = Math.cos(rotationZ - Utils.HALF_PI);
+			forward.y = Math.sin(rotationZ - Utils.HALF_PI);
 			forward.z = 0;
 			
 			// Calculate right vector from cross product of forward and up vectors
@@ -278,12 +272,15 @@ package net.akimirksnis.delta.game.entities.units
 			
 			// Scale movement vectors depending on keyboard input
 			scaledForward.copyFrom(forward);	
-			scaledForward.scaleBy(input.y);			
-			right.scaleBy(-input.x);
-			up.scaleBy(input.z);
+			scaledForward.scaleBy(velocityFromInput.y);			
+			right.scaleBy(-velocityFromInput.x);
+			up.scaleBy(velocityFromInput.z);
+			
+			// Reset
+			velocityFromInput.copyFrom(Utils.ZERO_VECTOR);
 			
 			// Sum up all regular movement vectors and normalize result
-			summedUpDirections.copyFrom(Utils.ZERO_VECTOR); 
+			summedUpDirections.copyFrom(Utils.ZERO_VECTOR);
 			summedUpDirections.incrementBy(scaledForward);
 			summedUpDirections.incrementBy(right);
 			summedUpDirections.incrementBy(up);
@@ -352,7 +349,7 @@ package net.akimirksnis.delta.game.entities.units
 		 * Moves the unit according to velocityVector.
 		 */
 		public function move():void
-		{		
+		{
 			/*----------------------
 			Handle animations
 			----------------------*/
@@ -386,7 +383,7 @@ package net.akimirksnis.delta.game.entities.units
 			var discardChildren:Boolean = GameMap.currentMap.terrainMesh != GameMap.currentMap.collisionMesh;
 			
 			// Set current ellipsoid position
-			source.setTo(mesh.x, mesh.y, mesh.z + this.mesh.boundBox.maxZ / 2);
+			source.setTo(x, y, z + this._mesh.boundBox.maxZ / 2);
 			
 			// Check for surface under the character				
 			onGround = collider.getCollision2(
@@ -433,9 +430,9 @@ package net.akimirksnis.delta.game.entities.units
 			);			
 			
 			// Set new coordinates of this unit
-			mesh.x = destination.x;
-			mesh.y = destination.y;
-			mesh.z = destination.z - this.mesh.boundBox.maxZ / 2;
+			x = destination.x;
+			y = destination.y;
+			z = destination.z - this._mesh.boundBox.maxZ / 2;
 			
 			/*----------------------
 			Adjust velocity vector to allow sliding the
@@ -511,13 +508,14 @@ package net.akimirksnis.delta.game.entities.units
 		}
 		
 		/*---------------------------
-		Helpers
-		---------------------------*/
-		
-		/*---------------------------
 		Getters/setters
 		---------------------------*/
 		
+		/**
+		 * Sets current animation.
+		 * 
+		 * @animation String ID of an animation.
+		 */
 		protected function set animation(animation:String):void
 		{
 			switch(animation)
@@ -566,16 +564,6 @@ package net.akimirksnis.delta.game.entities.units
 		public function get attackSpeed():int 
 		{
 			return _attackSpeed;
-		}
-		
-		/*---------------------------
-		Dispose
-		---------------------------*/
-		
-		public override function dispose():void
-		{
-			Globals.gameCore.removeLoopCallbackPre(aniController.update);
-			super.dispose();
 		}
 	}
 }

@@ -4,7 +4,6 @@ package net.akimirksnis.delta.game.controllers
 	import alternativa.engine3d.objects.WireFrame;
 	
 	import flash.display.InteractiveObject;
-	import flash.display.Sprite;
 	import flash.display.StageDisplayState;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -13,6 +12,7 @@ package net.akimirksnis.delta.game.controllers
 	
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
 	import net.akimirksnis.delta.game.entities.units.Unit;
+	import net.akimirksnis.delta.game.gui.GuiController;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
@@ -26,11 +26,10 @@ package net.akimirksnis.delta.game.controllers
 		public static const PI2:Number = Math.PI * 2;		
 		
 		// Regular attributes
-		protected var _followUnit:Unit;
+		protected var _unitInControl:Unit;
 		protected var _camera:Camera3D;
 		protected var _eventSource:InteractiveObject;
-		protected var _enabled:Boolean = false;		
-		protected var gameCursor:Sprite = new Sprite();
+		protected var _enabled:Boolean = false;
 		
 		// Input related variables
 		public var mouseSensitivity:Number = 1.0;
@@ -51,13 +50,11 @@ package net.akimirksnis.delta.game.controllers
 		GUI elements
 		---------------------------*/
 		
-		public function FPSController(eventSource:InteractiveObject, camera:Camera3D, followUnit:Unit = null)
+		public function FPSController(eventSource:InteractiveObject, camera:Camera3D, unitInControl:Unit = null)
 		{
 			_eventSource = eventSource;
 			_camera = camera;			
-			this.unit = followUnit;
-			
-			onStageResize();
+			this.unitInControl = unitInControl;
 		}
 		
 		/**
@@ -74,7 +71,7 @@ package net.akimirksnis.delta.game.controllers
 				handleMouseInput();
 				
 				// Handle unit movement
-				_followUnit.think();
+				//_unitInControl.think();
 				
 				// Handle camera and unit
 				handleCamera();				
@@ -95,10 +92,10 @@ package net.akimirksnis.delta.game.controllers
 		{
 			if(mouseLeftDown)
 			{
-				_followUnit.usePrimaryFire();
+				_unitInControl.usePrimaryFire();
 			} else if(mouseRightDown)
 			{
-				_followUnit.useSecondaryFire();	
+				_unitInControl.useSecondaryFire();	
 			}
 		}
 		
@@ -110,7 +107,7 @@ package net.akimirksnis.delta.game.controllers
 			// Use a single Vector3D object for unit movement representation
 			// x represents movement left or right
 			// y represents movement forward or backward
-			// z, w - currently not in use (todo: use z for jumps?)
+			// z, w - currently not in use
 			
 			// A		
 			if(currentlyPressedKeys[65])
@@ -137,9 +134,8 @@ package net.akimirksnis.delta.game.controllers
 			} else {
 				velocityFromInput.y = 0;
 			}
-			
-			// should be called once per tick
-			_followUnit.addVelocityFromInput(velocityFromInput);			
+
+			_unitInControl.velocityFromInput.copyFrom(velocityFromInput);
 		}
 		
 		/**
@@ -161,9 +157,9 @@ package net.akimirksnis.delta.game.controllers
 				percMovementY = mouseMovementY / Globals.stage.stageHeight;
 				
 				// Handle yaw
-				_followUnit.mesh.rotationZ -= Math.PI * percMovementX * mouseSensitivity;				
-				_followUnit.mesh.rotationZ = _followUnit.mesh.rotationZ > PI2 ? _followUnit.mesh.rotationZ - PI2 : _followUnit.mesh.rotationZ;
-				_followUnit.mesh.rotationZ = _followUnit.mesh.rotationZ < -PI2 ? _followUnit.mesh.rotationZ + PI2 : _followUnit.mesh.rotationZ;
+				_unitInControl.rotationZ -= Math.PI * percMovementX * mouseSensitivity;				
+				_unitInControl.rotationZ = _unitInControl.rotationZ > PI2 ? _unitInControl.rotationZ - PI2 : _unitInControl.rotationZ;
+				_unitInControl.rotationZ = _unitInControl.rotationZ < -PI2 ? _unitInControl.rotationZ + PI2 : _unitInControl.rotationZ;
 				
 				// Handle pitch
 				if(_camera.rotationX <= MAX_PITCH &&_camera.rotationX >= MIN_PITCH)
@@ -189,62 +185,46 @@ package net.akimirksnis.delta.game.controllers
 		{
 			// Add event listeners
 			Globals.stage.addEventListener(Event.MOUSE_LEAVE, onMouseLeave, false, 0, true);
-			Globals.stage.addEventListener(Event.RESIZE, onStageResize, false, 0, true);
 			Globals.stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseLeftDown, false, 0, true);
 			Globals.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseLeftUp, false, 0, true);
 			Globals.stage.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN, onMouseRightDown, false, 0, true);
 			Globals.stage.addEventListener(MouseEvent.RIGHT_MOUSE_UP, onMouseRightUp, false, 0, true);
 			Globals.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false, 0, true);
+			GuiController.instance.addEventListener(GuiController.DISPLAY_STATE_CHANGED, onDisplayStateChanged, false, 0, true);
 			_eventSource.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
-			_eventSource.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp, false, 0, true);	
+			_eventSource.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp, false, 0, true);
 		}
 		
 		protected function detachListeners():void			
 		{
 			// Remove unneeded event listeners
-			Globals.stage.removeEventListener(Event.MOUSE_LEAVE, onMouseLeave, false);
-			Globals.stage.removeEventListener(Event.RESIZE, onStageResize, false);
-			Globals.stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseLeftDown, false);
+			Globals.stage.removeEventListener(Event.MOUSE_LEAVE, onMouseLeave);
+			Globals.stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseLeftDown);
 			Globals.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseLeftUp, false);
-			Globals.stage.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN, onMouseRightDown, false);
-			Globals.stage.addEventListener(MouseEvent.RIGHT_MOUSE_UP, onMouseRightUp, false);
-			Globals.stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false);
-			_eventSource.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false);
-			_eventSource.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyUp, false);
+			Globals.stage.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN, onMouseRightDown);
+			Globals.stage.addEventListener(MouseEvent.RIGHT_MOUSE_UP, onMouseRightUp);
+			Globals.stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+			GuiController.instance.removeEventListener(GuiController.DISPLAY_STATE_CHANGED, onDisplayStateChanged);
+			_eventSource.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+			_eventSource.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 		}
 		
 		/**
 		 * Handle key down input that does not require per-frame check.
 		 */
 		private function handleNonPerFrameKeyDown():void
-		{
-			// Key: 'o'
-			// Enter fullscreen mode
-			// todo: move to gui controller
-			if(currentlyPressedKeys[79])
-			{
-				if(Globals.stage.displayState == StageDisplayState.NORMAL)
-				{
-					Globals.stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
-					enableMouseLock();
-				} else {
-					Globals.stage.displayState = StageDisplayState.NORMAL;
-					// Flash disables mouse lock automatically
-					//disableMouseLock();
-				}
-			}
-			
+		{			
 			// Jump - space (allow only once per tap)
 			if(currentlyPressedKeys[32] && allowJumping)
 			{
-				_followUnit.jump();
+				_unitInControl.jump();
 				allowJumping = false;
 			}
 			
 			// Propulse - shift (allow only once per tap)
 			if(currentlyPressedKeys[16] && allowPropulsing)
 			{
-				_followUnit.propulse();
+				_unitInControl.propulse();
 				allowPropulsing = false;
 			}			
 		}
@@ -259,6 +239,9 @@ package net.akimirksnis.delta.game.controllers
 			
 			// Invalidate mouse input
 			mouseRightDown = mouseLeftDown = false;
+			
+			// Invalidate movement input
+			velocityFromInput.setTo(0, 0, 0);
 		}
 		
 		/**
@@ -305,11 +288,6 @@ package net.akimirksnis.delta.game.controllers
 		Event handlers
 		---------------------------*/
 		
-		protected function onStageResize(e:Event = null):void
-		{
-			//
-		}
-		
 		private function onMouseLeftDown(e:MouseEvent):void
 		{
 			mouseLeftDown = true;
@@ -339,6 +317,11 @@ package net.akimirksnis.delta.game.controllers
 		{			
 			mouseMovementX = e.movementX;
 			mouseMovementY = e.movementY;
+		}
+		
+		private function onDisplayStateChanged(e:Event):void
+		{
+			enableMouseLock();
 		}
 		
 		/**
@@ -411,23 +394,18 @@ package net.akimirksnis.delta.game.controllers
 			}			
 		}
 		
-		public function get unit():Unit
+		public function get unitInControl():Unit
 		{
-			return _followUnit;
+			return _unitInControl;
 		}
-		public function set unit(value:Unit):void
+		public function set unitInControl(value:Unit):void
 		{
 			if(value != null)
 			{
-				_followUnit = value;
-				_followUnit.mesh.addChild(_camera);
-				//_camera.z += _followUnit.m.boundBox.maxZ * 0.95;
-				_camera.z += _followUnit.mesh.boundBox.maxZ * 1.25;
-				//_followUnit.m.visible = false;
-				
-				// todo
-				//_camera.z += _followUnit.model.boundBox.maxZ * 3;				
-				//_camera.y += _followUnit.model.boundBox.maxZ * 3;
+				_unitInControl = value;
+				_unitInControl.addChild(_camera);
+				// todo:
+				_camera.z += _unitInControl.boundBox.maxZ * 1.25;
 				
 				if(!_enabled)
 				{

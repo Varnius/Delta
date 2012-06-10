@@ -1,23 +1,15 @@
 package net.akimirksnis.delta.game.entities.weapons
 {
 	import alternativa.engine3d.animation.AnimationClip;
-	import alternativa.engine3d.collisions.EllipsoidCollider;
-	import alternativa.engine3d.materials.FillMaterial;
-	import alternativa.engine3d.objects.Mesh;
-	import alternativa.engine3d.objects.WireFrame;
-	import alternativa.engine3d.primitives.GeoSphere;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
-	import net.akimirksnis.delta.game.entities.AnimationType;
-	import net.akimirksnis.delta.game.entities.Entity;
-	import net.akimirksnis.delta.game.entities.EntityType;
-	import net.akimirksnis.delta.game.entities.units.Unit;
-	
-	import flash.events.Event;
 	import flash.geom.Vector3D;
-	import flash.utils.getTimer;
+	
+	import net.akimirksnis.delta.game.entities.AnimationType;
+	import net.akimirksnis.delta.game.entities.DynamicEntity;
+	import net.akimirksnis.delta.game.entities.units.Unit;
+	import net.akimirksnis.delta.game.utils.Globals;
 
-	public class Weapon extends Entity
+	public class Weapon extends DynamicEntity
 	{
 		// Weapon characteristics
 		
@@ -35,6 +27,9 @@ package net.akimirksnis.delta.game.entities.weapons
 		
 		protected var _unit:Unit;
 		
+		/**
+		 * Class constructor.
+		 */
 		public function Weapon(unit:Unit)
 		{
 			super();
@@ -108,33 +103,41 @@ package net.akimirksnis.delta.game.entities.weapons
 		Public methods
 		---------------------------*/
 		
+		/**
+		 * Uses primary fire.
+		 */
 		public function usePrimaryFire():void
 		{
 			// Implemented in child classes
 		}
 		
+		/**
+		 * Uses secondaryt fire.
+		 */
 		public function useSecondaryFire():void
 		{
 			// Implemented in child classes
+		}
+		
+		/**
+		 * @inherit
+		 */
+		public override function dispose():void
+		{
+			Globals.gameCore.removeLoopCallbackPre(aniController.update);
+			super.dispose();
 		}
 				
 		/*---------------------------
 		Getters/setters
 		---------------------------*/
 		
+		/**
+		 * Parent unit.
+		 */
 		public function get unit():Unit
 		{
 			return _unit;
-		}
-		
-		/*---------------------------
-		Dispose
-		---------------------------*/
-		
-		public override function dispose():void
-		{
-			Globals.gameCore.removeLoopCallbackPre(aniController.update);
-			super.dispose();
 		}
 	}
 }

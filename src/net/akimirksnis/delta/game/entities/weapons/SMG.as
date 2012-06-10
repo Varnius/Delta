@@ -5,12 +5,12 @@ package net.akimirksnis.delta.game.entities.weapons
 	import alternativa.engine3d.objects.Mesh;
 	import alternativa.engine3d.primitives.Box;
 	
-	import net.akimirksnis.delta.game.utils.Globals;
+	import flash.geom.Vector3D;
+	
 	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
-	
-	import flash.geom.Vector3D;
+	import net.akimirksnis.delta.game.utils.Globals;
 	
 	public class SMG extends InstantDamageWeapon
 	{		
@@ -37,8 +37,11 @@ package net.akimirksnis.delta.game.entities.weapons
 			_type = EntityType.WEAPON_SMG;			
 			// Set entity model
 			//_model = Globals.core.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh;
-			_mesh = new Box(15, 15, 15, 1, 1, 1, false, new FillMaterial(0x00FF00, 0.9));
-			Globals.renderer.uploadResources(_mesh.getResources());
+			
+			
+			var visual:Box = new Box(15, 15, 15, 1, 1, 1, false, new FillMaterial(0x00FF00, 0.9));
+			Globals.renderer.uploadResources(visual.getResources());
+			setModel(visual);
 			
 			// Set unique name
 			name = type + _count;
@@ -50,7 +53,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			setupEventHandlers();
 			
 			// Model selectable?
-			mesh.mouseEnabled = false;
+			_mesh.mouseEnabled = false;
 			
 			/*---------------------------
 			Calls to Weapon superclass

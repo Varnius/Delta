@@ -184,6 +184,7 @@ package net.akimirksnis.delta.game.utils
 		public static function getConcatenatedBoundBox(container:Object3D):BoundBox
 		{
 			var currentBoundBox:BoundBox, resultBoundBox:BoundBox;
+			var hasValidChildren:Boolean = false;
 			var minX:Number = Number.MAX_VALUE, maxX:Number = Number.MIN_VALUE, 
 				minY:Number = Number.MAX_VALUE, maxY:Number = Number.MIN_VALUE, 
 				minZ:Number = Number.MAX_VALUE, maxZ:Number = Number.MIN_VALUE;
@@ -197,6 +198,13 @@ package net.akimirksnis.delta.game.utils
 			for(var i:int = 0; i < container.numChildren; i++)
 			{
 				currentBoundBox = getConcatenatedBoundBox(container.getChildAt(i));
+				
+				if(currentBoundBox == null)
+				{
+					continue;
+				}
+				
+				hasValidChildren = true;
 				
 				if(currentBoundBox.minX < minX)
 				{
@@ -222,6 +230,11 @@ package net.akimirksnis.delta.game.utils
 				{
 					maxZ = container.boundBox.maxZ;
 				}
+			}
+			
+			if(!hasValidChildren)
+			{
+				return container.boundBox;
 			}
 			
 			resultBoundBox = new BoundBox();

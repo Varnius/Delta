@@ -1,13 +1,11 @@
 package net.akimirksnis.delta.game.entities.units
 {
-	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.objects.Mesh;
 	
+	import net.akimirksnis.delta.game.core.Library;
 	import net.akimirksnis.delta.game.entities.EntityType;
 	import net.akimirksnis.delta.game.entities.weapons.SMG;
 	import net.akimirksnis.delta.game.entities.weapons.Weapon;
-	import net.akimirksnis.delta.game.core.Library;
-	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class Walker2 extends Unit
@@ -17,7 +15,6 @@ package net.akimirksnis.delta.game.entities.units
 		---------------------------*/
 		
 		private static var _count:int = 0;
-		private static var _collider:EllipsoidCollider = new EllipsoidCollider(50, 50, 100);
 		
 		public static const MAX_HEALTH:int = 100;
 		public static const SPEED:Number = 800;
@@ -41,7 +38,7 @@ package net.akimirksnis.delta.game.entities.units
 			_type = EntityType.UNIT_WALKER2;			
 			
 			// Set entity model
-			setupModel(Library.instance.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);
+			setModel(Library.instance.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);
 			
 			// Set unique name
 			name = type + _count;
@@ -61,9 +58,6 @@ package net.akimirksnis.delta.game.entities.units
 			_maxHealth = MAX_HEALTH;
 			super._maxWalkSpeed = SPEED;
 			
-			// Set collider
-			setupCollider(_collider);
-			
 			/*---------------------------
 			Set weapons available to unit
 			Set current weapon
@@ -75,15 +69,30 @@ package net.akimirksnis.delta.game.entities.units
 			
 			for each(var w:Weapon in _weapons)
 			{
-				Utils.getDescendantByName(this.mesh, "Base_HumanRPalm").addChild(w.mesh);
-				w.mesh.visible = false;				
+				Utils.getDescendantByName(this, "Base_HumanRPalm").addChild(w);
+				w.visible = false;				
 			}
 			
-			_currentWeapon.mesh.visible = true;
+			_currentWeapon.visible = true;
 			
 			/*---------------------------
 			Other
-			---------------------------*/		
+			---------------------------*/
+			
+			// ..
+		}
+		
+		/*---------------------------
+		Public methods
+		---------------------------*/
+		
+		/**
+		 * @inherit
+		 */
+		public override function dispose():void
+		{
+			_count--;
+			super.dispose();
 		}
 		
 		/*---------------------------
@@ -94,32 +103,15 @@ package net.akimirksnis.delta.game.entities.units
 		{
 			return _count;
 		}
+		
 		public function get weapon():Weapon
 		{
 			return _currentWeapon;
-		}
-		public function get collider():EllipsoidCollider
-		{
-			return _collider;
-		}
-		public static function get collider():EllipsoidCollider
-		{
-			return _collider;
 		}
 		
 		public function set weapon(value:Weapon):void
 		{
 			_currentWeapon = value;
-		}
-		
-		/*---------------------------
-		Dispose
-		---------------------------*/
-		
-		public override function dispose():void
-		{
-			_count--;
-			super.dispose();
-		}
+		}		
 	}
 }

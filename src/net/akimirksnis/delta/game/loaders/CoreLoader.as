@@ -244,7 +244,7 @@ package net.akimirksnis.delta.game.loaders
 					}
 					
 				} else {						
-					currentAnimation = modelParser.parseA3DAnimation(ByteArray(animation.modelData));					
+					currentAnimation = modelParser.parseColladaAnimation(XML(animation.modelData));					
 				}
 				
 				currentAnimation.name = filenameNoExtension;

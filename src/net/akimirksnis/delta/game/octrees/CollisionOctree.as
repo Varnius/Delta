@@ -41,7 +41,7 @@ package net.akimirksnis.delta.game.octrees
 		/**
 		 * Class constructor.
 		 */
-		public function CollisionOctree(source:Mesh = null, splitLimit:int = 5, mergeLimit:int = 5)
+		public function CollisionOctree(source:Object3D = null, splitLimit:int = 5, mergeLimit:int = 5)
 		{			
 			instanceNum = instances;			
 			
@@ -115,7 +115,7 @@ package net.akimirksnis.delta.game.octrees
 		 * 
 		 * @param collider Collider to check.
 		 */
-		public function updateByCollider(collider:Mesh):void
+		public function updateByCollider(collider:Object3D):void
 		{
   			Partition(collidersAndPartitions[collider]).updateColliderPosition(collider);
 		}
@@ -125,7 +125,7 @@ package net.akimirksnis.delta.game.octrees
 		 * 
 		 * @param collider Collider to add.
 		 */
-		public function addCollider(collider:Mesh):void
+		public function addCollider(collider:Object3D):void
 		{		
 			rootPartitions[instanceNum].addCollider(collider);
 		}
@@ -135,7 +135,7 @@ package net.akimirksnis.delta.game.octrees
 		 * 
 		 * @param collider Collider to remove.
 		 */
-		public function removeCollider(collider:Mesh):void
+		public function removeCollider(collider:Object3D):void
 		{		
 			rootPartitions[instanceNum].removeCollider(collider);
 		}
@@ -146,7 +146,7 @@ package net.akimirksnis.delta.game.octrees
 		 * @param source An Object3D which will be used to calculate nearby colliders.
 		 * @return A list of potential colliders.
 		 */
-		public function getPotentialColliders(source:Mesh):Vector.<Object3D>
+		public function getPotentialColliders(source:Object3D):Vector.<Object3D>
 		{
 			return rootPartitions[instanceNum].getPotentialColliders(source);
 		}
