@@ -28,9 +28,14 @@ package net.akimirksnis.delta.game.gui.controllers
 		Component event callbacks
 		---------------------------*/
 		
-		public function onLoadButtonClick(e:Event):void
+		public function onCreateGameButtonClick(e:Event):void
 		{
-			Globals.gameCore.executeCommand("loadmap " + levelList.selectedItem.filename);
+			Globals.gameCore.executeCommand("create_game " + levelList.selectedItem.filename);
+		}
+		
+		public function onJoinGameButtonClick(e:Event):void
+		{
+			Globals.gameCore.executeCommand("join_game 4ag4j4a987h41agasg7fh77yyklj8l74");
 		}
 		
 		/*---------------------------

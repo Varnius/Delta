@@ -1,8 +1,8 @@
 package
 {
-	import flash.display.Sprite;
 	import flash.display.*;
-	import net.akimirksnis.delta.game.core.Core;	
+	
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.utils.Globals;
 	
 	[SWF(width="1280", height="720", frameRate="60")]

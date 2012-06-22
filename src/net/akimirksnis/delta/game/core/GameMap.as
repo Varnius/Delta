@@ -12,6 +12,7 @@ package net.akimirksnis.delta.game.core
 	import net.akimirksnis.delta.game.entities.DynamicEntity;
 	import net.akimirksnis.delta.game.entities.Entity;
 	import net.akimirksnis.delta.game.entities.StaticEntity;
+	import net.akimirksnis.delta.game.entities.units.Unit;
 	import net.akimirksnis.delta.game.octrees.CollisionOctree;
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
@@ -28,6 +29,8 @@ package net.akimirksnis.delta.game.core
 		public static const COLLISION_MESH_COLOR:uint = 0xCC0000;
 		
 		private static var _currentMap:GameMap;
+		
+		public var extension:String = "A3D";
 		
 		private var zeroVector:Vector3D = new Vector3D();
 		
@@ -46,6 +49,7 @@ package net.akimirksnis.delta.game.core
 		private var _collisionMesh:Mesh;
 		private var _terrainMesh:Mesh;
 		private var _wireframeRoot:Object3D;
+		private var _units:Vector.<Unit> = new Vector.<Unit>();
 		
 		/*---------------------------
 		Debug
@@ -153,7 +157,7 @@ package net.akimirksnis.delta.game.core
 			
 			// Setup dynamic collision octree
 			_dynamicCollisionOctree = new CollisionOctree(null, 10, 10);
-			Core.instance.addLoopCallbackPost(updateDynamicCollisionOctree);			
+			Core.instance.addLoopCallbackPost(updateDynamicCollisionOctree);
 			
 			/*---------------------------
 			Debug
@@ -198,7 +202,12 @@ package net.akimirksnis.delta.game.core
 			var marker:Object3D;
 			var globalCoords:Vector3D;
 			
-			entities.push(entity);
+			_entities.push(entity);
+			
+			if(entity is Unit)
+			{
+				_units.push(entity);
+			}
 			
 			if(markerName != "")
 			{
@@ -242,14 +251,28 @@ package net.akimirksnis.delta.game.core
 		{
 			var i:int;
 			
-			for(i = 0; i < entities.length; i++)
+			// Remove from entities list
+			for(i = 0; i < _entities.length; i++)
 			{
-				if(entities[i] == entity)
+				if(_entities[i] == entity)
 				{
-					entities.splice(i, 1);
+					_entities.splice(i, 1);
 				}
 			}
 			
+			// If unit, remove from units list
+			if(entity is Unit)
+			{
+				for(i = 0; i < units.length; i++)
+				{
+					if(units[i] == entity)
+					{
+						units.splice(i, 1);
+					}
+				}
+			}
+			
+			// Remove from collision octree if dynamic and collision enabled entity
 			if(entity is DynamicEntity)
 			{
 				if((!entity as DynamicEntity).excludeFromCollisions)			
@@ -283,7 +306,7 @@ package net.akimirksnis.delta.game.core
 		{
 			var e:Entity;
 			
-			for each(var ent:Entity in entities)
+			for each(var ent:Entity in _entities)
 			{
 				if(ent.name == name) e = ent;
 			}
@@ -335,14 +358,15 @@ package net.akimirksnis.delta.game.core
 			_wireframeRoot.addChild(_collisionMeshWireframe);
 			
 			// Generate wireframes for other meshes
+			// too slow for imported hl maps
 			/*for each(var m:Mesh in _mapMeshes)
 			{
-			if(!Utils.isDescendantOf(_terrainMesh, m) && !Utils.isDescendantOf(_collisionMesh, m))
-			{
-			w = WireFrame.createEdges(m, GENERIC_MESH_COLOR);
-			Renderer3D.instance.uploadResources(w.getResources(true));
-			_genericWireframes.addChild(w);
-			}
+				if(!Utils.isDescendantOf(_terrainMesh, m) && !Utils.isDescendantOf(_collisionMesh, m))
+				{
+					w = WireFrame.createEdges(m, GENERIC_MESH_COLOR);
+					Renderer3D.instance.uploadResources(w.getResources(true));
+					_genericWireframes.addChild(w);
+				}
 			}*/
 		}
 		
@@ -380,14 +404,6 @@ package net.akimirksnis.delta.game.core
 		public function get lights():Vector.<Light3D>
 		{
 			return _lights;
-		}
-		
-		/**
-		 * List of entities.
-		 */
-		public function get entities():Vector.<Entity>
-		{
-			return _entities;
 		}
 		
 		/**
@@ -447,7 +463,7 @@ package net.akimirksnis.delta.game.core
 		 */
 		public function get hierarchyText():String
 		{
-			return Utils.getColoredHierarchyAsHTMLString(this);
+			return Utils.getColoredHierarchyAsHTMLString(this, DynamicEntity);
 		}
 		
 		/**
@@ -456,6 +472,14 @@ package net.akimirksnis.delta.game.core
 		public function get wireframeRoot():Object3D
 		{
 			return _wireframeRoot;
+		}
+		
+		/**
+		 * List of units.
+		 */
+		public function get units():Vector.<Unit>
+		{
+			return _units;
 		}
 		
 		/**
@@ -472,6 +496,38 @@ package net.akimirksnis.delta.game.core
 		public function get dynamicCollisionOctree():CollisionOctree
 		{
 			return _dynamicCollisionOctree;
+		}
+		
+		/*---------------------------
+		Dispose
+		---------------------------*/
+		
+		/**
+		 * Clean up.
+		 */
+		public function dispose():void
+		{
+			// Remove lopp callbacks
+			Core.instance.removeLoopCallbackPost(updateDynamicCollisionOctree);
+			
+			// Dispose octrees
+			_staticCollisionOctree.dispose();
+			_dynamicCollisionOctree.dispose();
+			
+			// Remove entities
+			for each(var e:Entity in _entities)
+			{
+				removeChild(e);
+				e.dispose();
+			}
+			
+			_dynamicEntities = null;
+			_units = null;
+			
+			// Dispose resources
+			Renderer3D.instance.removeObject3D(this, true);
+			
+			_currentMap = null;
 		}
 	}
 }

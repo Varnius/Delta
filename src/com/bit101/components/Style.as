@@ -48,7 +48,7 @@ package com.bit101.components
 		public static var LIST_ROLLOVER:uint = 0XDDDDDD;
 		
 		public static var embedFonts:Boolean = true;
-		public static var fontName:String = "Orbitron Light";
+		public static var fontName:String = "Vera Sans Mono";
 		public static var fontSize:Number = 10;
 		public static var fontAntiAliasType:String = AntiAliasType.ADVANCED;
 		

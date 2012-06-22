@@ -145,20 +145,23 @@ package net.akimirksnis.delta.game.entities.weapons
 				intersectionPoint = finalIntersection.object.localToGlobal(finalIntersection.point);
 				
 				// debug start
-				if(quad != null)
-					Globals.renderer.removeObject3D(quad, true);
-				quad = WireFrame.createEdges(new Box(25,25,25,1,1,1),0x00FF00,1,2);
-				quad.x = intersectionPoint.x;
-				quad.y = intersectionPoint.y;
-				quad.z = intersectionPoint.z;
-				Globals.renderer.addObject3D(quad, true);		
-				
-				if(line != null)
-					Globals.renderer.removeObject3D(line, true);
-				var linev:Vector.<Vector3D> = new Vector.<Vector3D>();
-				linev.push(intersectionPoint, new Vector3D(origin.x, origin.y, origin.z - 25));
-				line = WireFrame.createLinesList(linev, 0x00FF00);
-				Globals.renderer.addObject3D(line, true);
+				if(Globals.DEBUG_MODE)
+				{
+					if(quad != null)
+						renderer.removeObject3D(quad, true);
+					quad = WireFrame.createEdges(new Box(25,25,25,1,1,1),0x00FF00,1,2);
+					quad.x = intersectionPoint.x;
+					quad.y = intersectionPoint.y;
+					quad.z = intersectionPoint.z;
+					renderer.addObject3D(quad, true);		
+					
+					if(line != null)
+						renderer.removeObject3D(line, true);
+					var linev:Vector.<Vector3D> = new Vector.<Vector3D>();
+					linev.push(intersectionPoint, new Vector3D(origin.x, origin.y, origin.z - 25));
+					line = WireFrame.createLinesList(linev, 0x00FF00);
+					renderer.addObject3D(line, true);
+				}
 				//debug end
 			}
 			
@@ -183,6 +186,19 @@ package net.akimirksnis.delta.game.entities.weapons
 		public override function dispose():void
 		{
 			super.dispose();
+			
+			if(Globals.DEBUG_MODE)
+			{
+				if(quad)
+				{
+					renderer.removeObject3D(quad, true);
+				}
+				
+				if(line)
+				{
+					renderer.removeObject3D(line, true);
+				}
+			}
 		}
 	}
 }

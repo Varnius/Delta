@@ -9,12 +9,10 @@ package net.akimirksnis.delta.game.entities.units
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class Walker2 extends Unit
-	{		
+	{	
 		/*---------------------------
 		Class vars and constants
-		---------------------------*/
-		
-		private static var _count:int = 0;
+		---------------------------*/	
 		
 		public static const MAX_HEALTH:int = 100;
 		public static const SPEED:Number = 800;
@@ -27,41 +25,45 @@ package net.akimirksnis.delta.game.entities.units
 		{
 			super();
 			
-			// Increase count on unit creation
-			_count++;
-			
 			/*---------------------------
 			Calls to Entity superclass
 			---------------------------*/
 			
 			// Set type of the entity
-			_type = EntityType.UNIT_WALKER2;			
+			_type = UnitType.WALKER;
 			
 			// Set entity model
-			setModel(Library.instance.getObjectByName(EntityType.UNIT_WALKER2).clone() as Mesh);
+			setModel(Library.instance.getObjectByName(UnitType.WALKER).clone() as Mesh);
 			
 			// Set unique name
-			name = type + _count;
-			
-			// Prepare animations [Unit + Entity]
-			setupAnimations();
+			name = "ControlledWalker2";
 			
 			// Setup event handlers
 			setupEventHandlers();
 			
 			/*---------------------------
+			Calls to DynamicEntity superclass
+			---------------------------*/
+			
+			// Prepare animations [Unit + Entity]
+			setupAnimations();
+			
+			/*---------------------------
 			Calls to Unit superclass
 			---------------------------*/
+			
+			// Setup collider
+			setupCollider();			
 			
 			// Set basic parameters of this type of entity
 			_health = MAX_HEALTH;
 			_maxHealth = MAX_HEALTH;
-			super._maxWalkSpeed = SPEED;
+			_maxWalkSpeed = SPEED;
 			
 			/*---------------------------
-			Set weapons available to unit
-			Set current weapon
-			Handle weapon models
+			- Set weapons available to unit
+			- Set current weapon
+			- Handle weapon models
 			---------------------------*/
 			
 			_weapons.push(new SMG(this));
@@ -84,25 +86,11 @@ package net.akimirksnis.delta.game.entities.units
 		
 		/*---------------------------
 		Public methods
-		---------------------------*/
-		
-		/**
-		 * @inherit
-		 */
-		public override function dispose():void
-		{
-			_count--;
-			super.dispose();
-		}
+		---------------------------*/	
 		
 		/*---------------------------
 		Setters/getters
 		---------------------------*/
-		
-		public static function get count():int
-		{
-			return _count;
-		}
 		
 		public function get weapon():Weapon
 		{
@@ -112,6 +100,18 @@ package net.akimirksnis.delta.game.entities.units
 		public function set weapon(value:Weapon):void
 		{
 			_currentWeapon = value;
-		}		
+		}
+		
+		/*---------------------------
+		Dispose
+		---------------------------*/
+		
+		/**
+		 * @inherit
+		 */
+		public override function dispose():void
+		{
+			super.dispose();
+		}
 	}
 }

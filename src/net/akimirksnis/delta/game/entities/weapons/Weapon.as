@@ -117,16 +117,7 @@ package net.akimirksnis.delta.game.entities.weapons
 		public function useSecondaryFire():void
 		{
 			// Implemented in child classes
-		}
-		
-		/**
-		 * @inherit
-		 */
-		public override function dispose():void
-		{
-			Globals.gameCore.removeLoopCallbackPre(aniController.update);
-			super.dispose();
-		}
+		}	
 				
 		/*---------------------------
 		Getters/setters
@@ -138,6 +129,19 @@ package net.akimirksnis.delta.game.entities.weapons
 		public function get unit():Unit
 		{
 			return _unit;
+		}
+		
+		/*---------------------------
+		Dispose
+		---------------------------*/
+		
+		/**
+		 * @inherit
+		 */
+		public override function dispose():void
+		{
+			super.dispose();
+			//Globals.gameCore.removeLoopCallbackPre(aniController.update);			
 		}
 	}
 }

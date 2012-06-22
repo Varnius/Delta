@@ -1,11 +1,15 @@
 package net.akimirksnis.delta.game.entities.units
 {
 	import alternativa.engine3d.animation.AnimationClip;
+	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.core.Object3D;
+	import alternativa.engine3d.materials.FillMaterial;
+	import alternativa.engine3d.primitives.GeoSphere;
 	
 	import flash.geom.Vector3D;
 	import flash.utils.getTimer;
 	
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.core.GameMap;
 	import net.akimirksnis.delta.game.entities.AnimationType;
 	import net.akimirksnis.delta.game.entities.DynamicEntity;
@@ -15,7 +19,7 @@ package net.akimirksnis.delta.game.entities.units
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	public class Unit extends DynamicEntity
-	{	
+	{		
 		/*---------------------------
 		Constants
 		---------------------------*/
@@ -97,6 +101,18 @@ package net.akimirksnis.delta.game.entities.units
 		protected var _currentWeaponIndex:int = 0;
 		protected var _weapons:Vector.<Weapon> = new Vector.<Weapon>();	
 		
+		/*---------------------------
+		Collisions
+		---------------------------*/
+		
+		protected var collider:EllipsoidCollider;
+		
+		/*---------------------------
+		Proxy mode
+		---------------------------*/		
+		
+		protected var _proxyModeOn:Boolean = false;
+		
 		/**
 		 * Class constructor.
 		 */
@@ -104,11 +120,29 @@ package net.akimirksnis.delta.game.entities.units
 		{
 			super();
 			
-			/*---------------------------
-			Calls to Entity superclass
-			---------------------------*/
+			// Think each frame
+			Core.instance.addLoopCallbackPost(think);
+		}
+		
+		/*---------------------------
+		Public methods
+		---------------------------*/
+		
+		/**
+		 * @inherit
+		 */
+		public override function think():void
+		{
+			super.think();
 			
-			_excludeFromCollisions = false;
+			if(!_proxyModeOn)
+			{			
+				// Handle input
+				handleVelocityFromInput();
+				
+				// Handle movement
+				move();
+			}
 		}
 		
 		/*---------------------------
@@ -160,37 +194,34 @@ package net.akimirksnis.delta.game.entities.units
 				aniSwitcher.activate(aniIdle, 0.1);
 				
 				// Register loop callback
-				Globals.gameCore.addLoopCallbackPre(aniController.update);
+				Core.instance.addLoopCallbackPost(aniController.update);
 			} else {
 				throw new Error("[Unit] Animation properties of the unit not found.");
 			}
 		}
 		
-		/*---------------------------
-		Public methods
-		---------------------------*/
-		
 		/**
-		 * @inherit
+		 * Sets up ellipsoid collider.
 		 */
-		public override function think():void
+		protected function setupCollider():void
 		{
-			super.think();
+			// Calculate collider by model bounds
+			collider = new EllipsoidCollider(
+				(_mesh.boundBox.maxX - _mesh.boundBox.minX) / 2,
+				(_mesh.boundBox.maxY - _mesh.boundBox.minY) / 2,
+				(_mesh.boundBox.maxZ - _mesh.boundBox.minZ) / 2
+			);
 			
-			// Handle input
-			handleVelocityFromInput();
-			
-			// Handle movement
-			move();
-		}
-		
-		/**
-		 * @inherit
-		 */
-		public override function dispose():void
-		{
-			Globals.gameCore.removeLoopCallbackPre(aniController.update);
-			super.dispose();
+			if(Globals.DEBUG_MODE)
+			{
+				var rutul:GeoSphere = new GeoSphere(1,10,false,new FillMaterial(0xAAFF00, 0.4));
+				renderer.uploadResources(rutul.getResources());
+				this._mesh.addChild(rutul);
+				rutul.scaleX = collider.radiusX;
+				rutul.scaleY = collider.radiusY;
+				rutul.scaleZ = collider.radiusZ;
+				rutul.z = this._mesh.boundBox.maxZ / 2;
+			}
 		}
 		
 		/*---------------------------
@@ -257,7 +288,7 @@ package net.akimirksnis.delta.game.entities.units
 		{			
 			// Reset vectors
 			up.copyFrom(Utils.UP_VECTOR);
-
+			
 			/*----------------------
 			Calculate direction
 			----------------------*/
@@ -420,7 +451,7 @@ package net.akimirksnis.delta.game.entities.units
 				velocity.y * elapsed,
 				velocity.z * elapsed
 			);
-
+			
 			// Calculate final destination point (taking in the account collisions and gravity)
 			var destination:Vector3D = collider.calculateDestination2(
 				source,
@@ -541,6 +572,15 @@ package net.akimirksnis.delta.game.entities.units
 			}
 		}
 		
+		public function get proxyModeEnabled():Boolean
+		{
+			return _proxyModeOn;
+		}
+		public function set proxyModeEnabled(value:Boolean):void
+		{
+			_proxyModeOn = true;
+		}
+		
 		public function get maxHealth():int
 		{
 			return _maxHealth;
@@ -564,6 +604,27 @@ package net.akimirksnis.delta.game.entities.units
 		public function get attackSpeed():int 
 		{
 			return _attackSpeed;
+		}
+		
+		/*---------------------------
+		Dispose
+		---------------------------*/
+		
+		/**
+		 * @inherit
+		 */
+		public override function dispose():void
+		{
+			super.dispose();
+			
+			// Dispose weapons
+			for each(var w:Weapon in _weapons)
+			{
+				w.dispose();
+			}
+			
+			// Remove animation controller loop callback
+			Core.instance.removeLoopCallbackPost(aniController.update);			
 		}
 	}
 }

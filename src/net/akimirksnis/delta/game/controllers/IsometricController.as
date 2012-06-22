@@ -20,6 +20,9 @@ package net.akimirksnis.delta.game.controllers
 	import net.akimirksnis.delta.game.utils.Globals;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
+	/**
+	 * @deprecated
+	 */
 	public class IsometricController implements ICameraController
 	{	
 		// Constants

@@ -16,7 +16,7 @@ package net.akimirksnis.delta.game.entities.weapons
 	{		
 		// Class vars and constants
 		
-		private static var _count:int = 0;
+		public static var count:int = 0;
 		public static const DAMAGE:int = 10;
 		public static const RANGE:int = 500;
 		
@@ -27,7 +27,7 @@ package net.akimirksnis.delta.game.entities.weapons
 			super(unit);
 			
 			// Increase count on unit creation
-			_count++;
+			count++;
 			
 			/*---------------------------
 			Calls to Entity superclass
@@ -40,11 +40,11 @@ package net.akimirksnis.delta.game.entities.weapons
 			
 			
 			var visual:Box = new Box(15, 15, 15, 1, 1, 1, false, new FillMaterial(0x00FF00, 0.9));
-			Globals.renderer.uploadResources(visual.getResources());
+			renderer.uploadResources(visual.getResources());
 			setModel(visual);
 			
 			// Set unique name
-			name = type + _count;
+			name = type + count;
 			
 			// Prepare animations [Unit + Entity]
 			setupAnimations();
@@ -70,19 +70,14 @@ package net.akimirksnis.delta.game.entities.weapons
 		Setters/getters
 		---------------------------*/
 		
-		public static function get count():int
-		{
-			return _count;
-		}
-		
 		/*---------------------------
 		Dispose
 		---------------------------*/
 		
 		public override function dispose():void
-		{
-			_count--;
+		{			
 			super.dispose();
+			count--;
 		}
 	}
 }

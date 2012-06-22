@@ -11,7 +11,6 @@ package net.akimirksnis.delta.game.core
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
-	import net.akimirksnis.delta.game.debug.LightDebugSprite;
 	import net.akimirksnis.delta.game.utils.Globals;
 
 	/**
@@ -360,12 +359,15 @@ package net.akimirksnis.delta.game.core
 			}			
 			_camera = camera;
 			
-			// Attach camera to the main containers
-			//_mainContainer.addChild(_camera);
-			
-			// Attach camera output to the stage
-			stage.addChild(_camera.view);
-			stage.addChild(_camera.diagram);
+			if(camera != null)
+			{
+				// Attach camera to the main containers
+				//_mainContainer.addChild(_camera);
+				
+				// Attach camera output to the stage
+				stage.addChild(_camera.view);
+				stage.addChild(_camera.diagram);
+			}			
 			
 			// Resize stage if necessary
 			onStageResize(null);
@@ -390,4 +392,18 @@ package net.akimirksnis.delta.game.core
 	}
 }
 
+import alternativa.engine3d.core.Light3D;
+import alternativa.engine3d.objects.Sprite3D;
+
 class SingletonLock {}
+
+class LightDebugSprite extends Sprite3D
+{
+	public var parentLight:Light3D;
+	
+	public function LightDebugSprite(sprite:Sprite3D)
+	{
+		super(sprite.width, sprite.height, sprite.material);
+		clonePropertiesFrom(sprite);
+	}
+}

@@ -8,6 +8,7 @@ package net.akimirksnis.delta.game.core
 	
 	import net.akimirksnis.delta.delta_internal;
 	import net.akimirksnis.delta.game.entities.units.Unit;
+	import net.akimirksnis.delta.game.utils.Logger;
 	import net.akimirksnis.delta.game.utils.Utils;
 	
 	use namespace delta_internal;
@@ -18,7 +19,6 @@ package net.akimirksnis.delta.game.core
 		private static var _allowInstantiation:Boolean = false;
 		private static var _instance:CommandExecuter = new CommandExecuter(SingletonLock);
 		
-		private var _lastCommand:String;
 		private var _lastResponse:String;
 		
 		private var core:Core;
@@ -53,7 +53,8 @@ package net.akimirksnis.delta.game.core
 			var subs:Array;
 			var parsedInteger:Number;
 			
-			_lastCommand = command;
+			Logger.log(command);
+			
 			_lastResponse = "";
 			
 			command = Utils.trim(command);
@@ -74,7 +75,9 @@ package net.akimirksnis.delta.game.core
 			{
 				parsedInteger = parseInt(subs[1]);	
 				
-				if(!isNaN(parsedInteger))
+				// String(parsedInteger).length == (subs[1]).length
+				// "4gds4fg4das" parses as 4  so.. 
+				if(!isNaN(parsedInteger) && String(parsedInteger).length == (subs[1]).length)
 				{		
 					executeInteger(subs[0], parsedInteger);
 				} else {
@@ -91,15 +94,15 @@ package net.akimirksnis.delta.game.core
 		{
 			var o:Object3D;
 			
-			// commands not requiring map to be running
+			// Commands not requiring map to be running
 			
-			if(core.mapRunning)
+			if(GameMap.currentMap)
 			{
 				switch(command)
 				{
 					case "show_unit_boundboxes":
 					{
-						for each(var u:Unit in core.units)
+						for each(var u:Unit in GameMap.currentMap.units)
 						{
 							u.showBoundBox = Boolean(value);
 						}
@@ -213,16 +216,29 @@ package net.akimirksnis.delta.game.core
 			
 			switch(command)
 			{
+				// Loads map without online support
 				case "loadmap":
 				{
-					core.loader.loadMap(value);
+					core.loadMap(value);
+					break;
+				}					
+				// Creates online game for specified map
+				case "create_game":
+				{
+					core.createOnlineGame(value);
+					break;
+				}
+				// Joins online game
+				case "join_game":
+				{
+					core.joinOnlineGame(value);
 					break;
 				}
 			}
 			
-			if(core.mapRunning)
+			if(GameMap.currentMap)
 			{
-				//
+				// ..
 			}
 			
 			core.dispatchEvent(new Event("command_executed"));
@@ -230,15 +246,31 @@ package net.akimirksnis.delta.game.core
 		
 		private function executeSingle(command:String):void
 		{			
-			// commands not requiring map to be running
+			// Commands not requiring map to be running
 			
-			if(core.mapRunning)
+			switch(command)
+			{
+				case "disconnect":
+				{
+					core.disconnectOnlineGame();
+					break;
+				}
+			}
+			
+			if(GameMap.currentMap)
 			{
 				switch(command)
 				{
 					case "ping":
+					{
 						trace("ping");
 						break;
+					}
+					case "unloadmap":
+					{
+						core.unloadMap();
+						break;
+					}
 				}
 			}		
 			
@@ -255,14 +287,6 @@ package net.akimirksnis.delta.game.core
 		public static function get instance():CommandExecuter
 		{			
 			return _instance;
-		}
-		
-		/**
-		 * Last executed command string.
-		 */
-		public function get lastCommand():String
-		{
-			return _lastCommand;
 		}
 		
 		/**

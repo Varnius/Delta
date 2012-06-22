@@ -410,9 +410,9 @@ package net.akimirksnis.delta.game.loaders
 			// If everything is loaded
 			if(result)
 			{
-				for each(property in assetLoadStatus)
+				for(var key:String in assetLoadStatus)
 				{
-					property = false;
+					assetLoadStatus[key] = false;
 				}
 				
 				preloader.unfocus();
@@ -466,6 +466,7 @@ package net.akimirksnis.delta.game.loaders
 				}
 				
 				map.name = mapFilenameNoExtension;
+				map.extension = String(rawMap.fileName).substr(-3, 3);
 				map.init();
 				
 				trace("-------");
@@ -533,12 +534,12 @@ package net.akimirksnis.delta.game.loaders
 			
 			if(result)
 			{
-				for each(property in mapLoadStatus)
+				for(var key:String in mapLoadStatus)
 				{
-					property = false;
+					mapLoadStatus[key] = false;
 				}
 				
-				dispatchEvent(new Event(CoreLoaderEvent.MAP_LOADED));
+				dispatchEvent(new CoreLoaderEvent(CoreLoaderEvent.MAP_LOADED));
 				trace("[CoreLoader] > Map loaded.");
 			}
 			

@@ -4,6 +4,7 @@ package net.akimirksnis.delta.game.octrees
 	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.CullingPlane;
 	import alternativa.engine3d.core.Object3D;
+	import alternativa.engine3d.core.Resource;
 	import alternativa.engine3d.objects.Mesh;
 	
 	import flash.geom.Vector3D;
@@ -27,12 +28,11 @@ package net.akimirksnis.delta.game.octrees
 		delta_internal static var splitLimits:Vector.<int> = new Vector.<int>();
 		delta_internal static var mergeLimits:Vector.<int> = new Vector.<int>();
 	
-		private static var instances:int = 0;
 		private var instanceNum:int;		
 		
 		// Use a dictionary for quickly accessing partition that holds
 		// needed collider without recursively searching the whole tree
-		private var collidersAndPartitions:Dictionary = new Dictionary();
+		private var collidersAndPartitions:Dictionary = new Dictionary(true);
 		
 		// Debug
 		private var wireframeRoot:Object3D;
@@ -43,7 +43,21 @@ package net.akimirksnis.delta.game.octrees
 		 */
 		public function CollisionOctree(source:Object3D = null, splitLimit:int = 5, mergeLimit:int = 5)
 		{			
-			instanceNum = instances;			
+			instanceNum = -1;
+			
+			// Search for possible gaps to fill in
+			for(var i:int = 0; i < rootPartitions.length; i++)
+			{
+				if(rootPartitions[i] == null)
+				{
+					instanceNum = i;
+				}
+			}
+			
+			if(instanceNum == -1)
+			{
+				instanceNum = rootPartitions.length;	
+			}					
 			
 			var rootPartition:Partition;
 			
@@ -89,7 +103,7 @@ package net.akimirksnis.delta.game.octrees
 				);					
 			}
 			rootPartition.name = "partition-root";
-			rootPartitions[instances] = rootPartition;
+			rootPartitions[instanceNum] = rootPartition;
 			
 			splitLimits.push(splitLimit);
 			mergeLimits.push(mergeLimit);		
@@ -97,13 +111,11 @@ package net.akimirksnis.delta.game.octrees
 			if(Globals.DEBUG_MODE)
 			{
 				wireframeRoot = new Object3D();
-				wireframeRoot.name = "octree-wireframe-root" + instances;
+				wireframeRoot.name = "octree-wireframe-root" + instanceNum;
 				wireframeRoot.visible = false;
 				GameMap.currentMap.wireframeRoot.addChild(wireframeRoot);
 				rootPartition.wireframeRoot = wireframeRoot;
 			}
-			
-			instances++;
 		}
 		
 		/*---------------------------
@@ -185,5 +197,29 @@ package net.akimirksnis.delta.game.octrees
 				wireframeRoot.visible = value;
 			}		
 		}
+		
+		/*---------------------------
+		Dispose
+		---------------------------*/
+		
+		/**
+		 * Clean up.
+		 */
+		public function dispose():void
+		{			
+			rootPartitions[instanceNum] = null;
+			splitLimits[instanceNum] = null;
+			mergeLimits[instanceNum] = null;
+			collidersAndPartitions = null;
+			
+			// Get rid of wireframes
+			if(Globals.DEBUG_MODE)
+			{
+				for each(var r:Resource in wireframeRoot.getResources(true))
+				{
+					r.dispose();
+				}
+			}
+		}		
 	}
 }

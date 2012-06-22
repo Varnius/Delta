@@ -600,12 +600,12 @@ package net.akimirksnis.delta.game.octrees
 		---------------------------*/
 		
 		/**
-		 * Grows octree in case there are object outside its bounds.
+		 * Grows octree in case there are objects outside its bounds.
 		 * 
 		 * @param collider Collider outside octree bounds.
 		 */
 		private function grow(collider:Object3D):void
-		{		
+		{
 			var colliderMinGlobal:Vector3D = collider.localToGlobal(new Vector3D(collider.boundBox.minX, collider.boundBox.minY, collider.boundBox.minZ));
 			
 			// Determine the position of new root partition

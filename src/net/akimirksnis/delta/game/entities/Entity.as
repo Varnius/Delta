@@ -8,12 +8,14 @@ package net.akimirksnis.delta.game.entities
 	import flash.geom.Vector3D;
 	
 	import net.akimirksnis.delta.game.core.Library;
+	import net.akimirksnis.delta.game.core.Renderer3D;
 	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class Entity extends Object3D
 	{		
 		protected var _type:String = EntityType.ENTITY_UNDEFINED;	
-		protected var library:Library = Library.instance;		
+		protected var library:Library = Library.instance;	
+		protected var renderer:Renderer3D = Renderer3D.instance;
 		
 		// Geometry
 		protected var _mesh:Mesh;
@@ -44,14 +46,6 @@ package net.akimirksnis.delta.game.entities
 			super.calculateBoundBox();
 			boundBox = _mesh.boundBox;			
 		}
-		
-		/**
-		 * Disposes an entity.
-		 */
-		public function dispose():void
-		{
-			// ..
-		}	
 		
 		/*---------------------------
 		Setup helpers
@@ -96,7 +90,7 @@ package net.akimirksnis.delta.game.entities
 				
 				_boundBoxWireframe = WireFrame.createLineStrip(points, 0xFFFFFF, 1, 1);
 				_boundBoxWireframe.visible = false;
-				Globals.renderer.uploadResources(_boundBoxWireframe.getResources());
+				renderer.uploadResources(_boundBoxWireframe.getResources());
 				addChild(_boundBoxWireframe);
 			}
 		}	
@@ -149,5 +143,17 @@ package net.akimirksnis.delta.game.entities
 			_boundBoxWireframe.visible = value;
 			_showBoundBox = value;
 		}
+		
+		/*---------------------------
+		Dispose
+		---------------------------*/
+		
+		/**
+		 * Disposes an entity.
+		 */
+		public function dispose():void
+		{
+			// ..
+		}	
 	}
 }

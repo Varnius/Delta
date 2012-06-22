@@ -1,7 +1,6 @@
 package net.akimirksnis.delta.game.controllers
 {
 	import alternativa.engine3d.core.Camera3D;
-	import alternativa.engine3d.objects.WireFrame;
 	
 	import flash.display.InteractiveObject;
 	import flash.display.StageDisplayState;
@@ -40,11 +39,7 @@ package net.akimirksnis.delta.game.controllers
 		protected var mouseRightDown:Boolean;
 		protected var mouseMovementX:Number;
 		protected var mouseMovementY:Number;
-		protected var velocityFromInput:Vector3D = new Vector3D();		
-		
-		// Debug
-		protected var targetLine:WireFrame;
-		protected var traceLine:WireFrame;
+		protected var velocityFromInput:Vector3D = new Vector3D();
 		
 		/*---------------------------
 		GUI elements

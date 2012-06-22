@@ -1,18 +1,20 @@
 package net.akimirksnis.delta.game.gui.controllers
 {
+	import alternativa.engine3d.core.Object3D;
+	
 	import com.bit101.components.CheckBox;
-	import com.bit101.components.Component;
 	import com.bit101.components.InputText;
-	import com.bit101.components.Overlay;
 	import com.bit101.components.TextArea;
-	import com.bit101.utils.MinimalConfigurator;
 	
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	
+	import net.akimirksnis.delta.game.core.Core;
 	import net.akimirksnis.delta.game.core.GameMap;
+	import net.akimirksnis.delta.game.entities.DynamicEntity;
 	import net.akimirksnis.delta.game.gui.views.DebugOverlay;
-	import net.akimirksnis.delta.game.utils.Globals;
+	import net.akimirksnis.delta.game.utils.Logger;
+	import net.akimirksnis.delta.game.utils.Utils;
 
 	public class DebugOverlayController extends OverlayController
 	{		
@@ -26,7 +28,10 @@ package net.akimirksnis.delta.game.gui.controllers
 			consoleTextArea = TextArea(minco.getCompById("console_text"));
 			consoleInputText = InputText(minco.getCompById("console_input"));
 			
-			Globals.gameCore.addEventListener("command_executed", onCommandExecuted);			
+			// Set logger output target
+			Logger.out = this;
+			
+			Core.instance.addEventListener("command_executed", onCommandExecuted);			
 		}
 		
 		/*---------------------------
@@ -39,8 +44,12 @@ package net.akimirksnis.delta.game.gui.controllers
 		
 		public function onCommandExecuted(e:Event):void
 		{
-			consoleTextArea.text += Globals.gameCore.lastCommand + "\n";
-			consoleTextArea.text += Globals.gameCore.lastResponse.length > 0 ? Globals.gameCore.lastResponse.length + "\n" : "";
+			consoleTextArea.text += Core.instance.lastResponse.length > 0 ? Core.instance.lastResponse.length + "\n" : "";
+		}
+		
+		public function appendToConsole(s:String):void
+		{
+			consoleTextArea.text += s + "\n";
 		}
 		
 		private function onMapHierarchyChanged(e:Event = null):void
@@ -58,7 +67,7 @@ package net.akimirksnis.delta.game.gui.controllers
 		 */
 		public function onConsoleSubmit(e:Event = null):void
 		{			
-			Globals.gameCore.executeCommand(consoleInputText.text);
+			Core.instance.executeCommand(consoleInputText.text);
 			consoleInputText.text = "";
 		}
 		
@@ -82,17 +91,17 @@ package net.akimirksnis.delta.game.gui.controllers
 		public function onGeometryDebugMenuSubmit(e:Event = null):void
 		{
 			(minco.getCompById("cb_show_terrain") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_terrain 1") : 
-				Globals.gameCore.executeCommand("show_terrain 0") ;
+				Core.instance.executeCommand("show_terrain 1") : 
+				Core.instance.executeCommand("show_terrain 0") ;
 			(minco.getCompById("cb_show_terrain_wireframe") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_terrain_wireframe 1") : 
-				Globals.gameCore.executeCommand("show_terrain_wireframe 0") ;
+				Core.instance.executeCommand("show_terrain_wireframe 1") : 
+				Core.instance.executeCommand("show_terrain_wireframe 0") ;
 			(minco.getCompById("cb_show_colmesh_wireframe") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_colmesh_wireframe 1") : 
-				Globals.gameCore.executeCommand("show_colmesh_wireframe 0") ;
+				Core.instance.executeCommand("show_colmesh_wireframe 1") : 
+				Core.instance.executeCommand("show_colmesh_wireframe 0") ;
 			(minco.getCompById("cb_show_generic_wireframe") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_generic_wireframe 1") : 
-				Globals.gameCore.executeCommand("show_generic_wireframe 0") ;
+				Core.instance.executeCommand("show_generic_wireframe 1") : 
+				Core.instance.executeCommand("show_generic_wireframe 0") ;
 		}
 		
 		/**
@@ -102,11 +111,11 @@ package net.akimirksnis.delta.game.gui.controllers
 		public function onOctreeDebugMenuSubmit(e:Event = null):void
 		{
 			(minco.getCompById("cb_show_static_octree") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_static_octree 1") : 
-				Globals.gameCore.executeCommand("show_static_octree 0") ;
+				Core.instance.executeCommand("show_static_octree 1") : 
+				Core.instance.executeCommand("show_static_octree 0") ;
 			(minco.getCompById("cb_show_dynamic_octree") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_dynamic_octree 1") : 
-				Globals.gameCore.executeCommand("show_dynamic_octree 0") ;
+				Core.instance.executeCommand("show_dynamic_octree 1") : 
+				Core.instance.executeCommand("show_dynamic_octree 0") ;
 		}
 		
 		/**
@@ -116,8 +125,8 @@ package net.akimirksnis.delta.game.gui.controllers
 		public function onUnitDebugMenuSubmit(e:Event = null):void
 		{
 			(minco.getCompById("cb_show_unit_boundboxes") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_unit_boundboxes 1") : 
-				Globals.gameCore.executeCommand("show_unit_boundboxes 0") ;
+				Core.instance.executeCommand("show_unit_boundboxes 1") : 
+				Core.instance.executeCommand("show_unit_boundboxes 0") ;
 		}
 		
 		/**
@@ -127,20 +136,20 @@ package net.akimirksnis.delta.game.gui.controllers
 		public function onLightsDebugMenuSubmit(e:Event = null):void
 		{
 			(minco.getCompById("cb_light_enable_ambient") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("light_enable_ambient 1") : 
-				Globals.gameCore.executeCommand("light_enable_ambient 0") ;
+				Core.instance.executeCommand("light_enable_ambient 1") : 
+				Core.instance.executeCommand("light_enable_ambient 0") ;
 			(minco.getCompById("cb_light_enable_omni") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("light_enable_omni 1") : 
-				Globals.gameCore.executeCommand("light_enable_omni 0") ;
+				Core.instance.executeCommand("light_enable_omni 1") : 
+				Core.instance.executeCommand("light_enable_omni 0") ;
 			(minco.getCompById("cb_light_enable_directional") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("light_enable_directional 1") : 
-				Globals.gameCore.executeCommand("light_enable_directional 0") ;
+				Core.instance.executeCommand("light_enable_directional 1") : 
+				Core.instance.executeCommand("light_enable_directional 0") ;
 			(minco.getCompById("cb_light_enable_spot") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("light_enable_spot 1") : 
-				Globals.gameCore.executeCommand("light_enable_spot 0") ;
+				Core.instance.executeCommand("light_enable_spot 1") : 
+				Core.instance.executeCommand("light_enable_spot 0") ;
 			(minco.getCompById("cb_show_light_sources") as CheckBox).selected ? 
-				Globals.gameCore.executeCommand("show_light_sources 1") : 
-				Globals.gameCore.executeCommand("show_light_sources 0") ;
+				Core.instance.executeCommand("show_light_sources 1") : 
+				Core.instance.executeCommand("show_light_sources 0") ;
 		}
 		
 		/**
@@ -149,7 +158,7 @@ package net.akimirksnis.delta.game.gui.controllers
 		 */
 		public function onUseFreeRoamCameraSubmit(e:Event):void
 		{
-			Globals.gameCore.executeCommand("use_camera_mode 2");
+			Core.instance.executeCommand("use_camera_mode 2");
 		}
 		
 		/**
@@ -158,7 +167,7 @@ package net.akimirksnis.delta.game.gui.controllers
 		 */
 		public function onUseStandartCameraSubmit(e:Event):void
 		{
-			Globals.gameCore.executeCommand("use_camera_mode 1");
+			Core.instance.executeCommand("use_camera_mode 1");
 		}
 		
 		/*---------------------------
@@ -169,11 +178,21 @@ package net.akimirksnis.delta.game.gui.controllers
 		Getters/setters
 		---------------------------*/
 		
-		public function set map(value:GameMap):void
+		public function set hierarchyWindowSource(value:Object3D):void
 		{
-			// Important - use weak reference to avoid memory leaks (todo: check if really works)
-			value.addEventListener(GameMap.HIERARCHY_CHANGED, onMapHierarchyChanged, false, 0, true);
-			onMapHierarchyChanged();
+			if(value != null)
+			{
+				if(value is GameMap)
+				{
+					value.addEventListener(GameMap.HIERARCHY_CHANGED, onMapHierarchyChanged, false, 0, true);
+					onMapHierarchyChanged();
+				} else {
+					TextArea(minco.getCompById("textarea-hierarchy")).textField.htmlText = Utils.getColoredHierarchyAsHTMLString(value, DynamicEntity);
+				}				
+				
+			} else {
+				TextArea(minco.getCompById("textarea-hierarchy")).textField.htmlText = "";
+			}
 		}
 	}
 }

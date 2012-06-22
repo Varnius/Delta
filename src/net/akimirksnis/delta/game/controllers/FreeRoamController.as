@@ -6,6 +6,7 @@ package net.akimirksnis.delta.game.controllers
 	import flash.display.InteractiveObject;
 	
 	import net.akimirksnis.delta.game.controllers.interfaces.ICameraController;
+	import net.akimirksnis.delta.game.core.Renderer3D;
 	import net.akimirksnis.delta.game.utils.Globals;
 
 	public class FreeRoamController extends SimpleObjectController implements ICameraController
@@ -64,10 +65,22 @@ package net.akimirksnis.delta.game.controllers
 				_enabled = false;
 			} else if(!_enabled && value)
 			{
-				Globals.renderer.mainContainer.addChild(this.camera);
+				Renderer3D.instance.mainContainer.addChild(this.camera);
 				this.enable();
 				_enabled = true;
 			}
-		}		
+		}	
+		
+		/*---------------------------
+		Dispose
+		---------------------------*/
+		
+		/**
+		 * Clean up.
+		 */
+		public function dispose():void
+		{
+			// ..
+		}
 	}
 }

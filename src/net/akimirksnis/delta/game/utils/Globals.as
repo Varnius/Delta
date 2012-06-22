@@ -32,9 +32,7 @@ package net.akimirksnis.delta.game.utils
 		public static var stage:Stage;
 		public static var stage3D:Stage3D;
 		public static var gameCore:Core;
-		public static var renderer:Renderer3D;
 		public static var guiController:GuiController;
-		public static var cameraController:IController;
 		public static var GUIRoot:DisplayObjectContainer;
 		
 		// Global debug mode

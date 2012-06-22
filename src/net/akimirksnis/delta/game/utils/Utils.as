@@ -281,12 +281,18 @@ package net.akimirksnis.delta.game.utils
 		/**
 		 * Returns a hierarchy for given object.
 		 * 
-		 * @param object Source object. 
+		 * @param object Source object.
+		 * @param excludeClass Object type to exclude.
 		 */
-		public static function getColoredHierarchyAsHTMLString(object:Object3D, spacer:String = ""):String
+		public static function getColoredHierarchyAsHTMLString(object:Object3D, excludeClass:Class, spacer:String = ""):String
 		{
 			var result:String = "";
 			var color:String = COLOR_DEFAULT;
+			
+			if(object is excludeClass)
+			{
+				return result;
+			}
 			
 			if(object is Skin)
 			{
@@ -309,7 +315,7 @@ package net.akimirksnis.delta.game.utils
 			
 			for(var i:int = 0; i < object.numChildren; i++)
 			{
-				result += getColoredHierarchyAsHTMLString(object.getChildAt(i), spacer + "     ");
+				result += getColoredHierarchyAsHTMLString(object.getChildAt(i), excludeClass, spacer + "     ");
 			}
 			
 			return result;

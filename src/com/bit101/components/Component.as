@@ -54,6 +54,9 @@ package com.bit101.components
 		[Embed(source="/assets/orbitron-light.otf", embedAsCFF="false", fontName="Orbitron Light", mimeType="application/x-font")]
 		protected var Orbitron:Class;
 		
+		[Embed(source="/assets/vera-sans-mono.ttf", embedAsCFF="false", fontName="Vera Sans Mono", mimeType="application/x-font")]
+		protected var VeraSansMono:Class;
+		
 		protected var _width:Number = 0;
 		protected var _height:Number = 0;
 		protected var _tag:int = -1;

@@ -50,9 +50,8 @@ package net.akimirksnis.delta.game.gui
 			// Debug overlay
 			if(Globals.DEBUG_MODE)
 			{
-				debugOverlayController = new DebugOverlayController("DebugOverlayController");				
+				debugOverlayController = new DebugOverlayController("DebugOverlayController");
 				addOverlayController(debugOverlayController);
-				debugOverlayController.enabled = Globals.DEBUG_MODE;
 			}			
 			
 			// Preloader overlay
@@ -115,7 +114,7 @@ package net.akimirksnis.delta.game.gui
 		
 		/**
 		 * Brings specified overlay to focus. All other active overlays are
-		 * disabled (except ones with multiFocusEnabled property set to true).
+		 * disabled (except ones with multiFocusEnabled set to true).
 		 * 
 		 * @param name Name of the overlay.
 		 */
